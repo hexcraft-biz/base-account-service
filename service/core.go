@@ -19,26 +19,25 @@ func New() (*Service, error) {
 	engine.SetTrustedProxies([]string{cfg.TrustProxy})
 	// TODO session cookies issue
 
-	if cfg.AutoCreateDBSchema {
-		MustNot(cfg.MysqlDBInit("./sql/"))
-	}
+	//if cfg.AutoCreateDBSchema {
+	//	MustNot(cfg.MysqlDBInit("./sql/"))
+	//}
 
-	MustNot(cfg.DBOpen(false))
+	//MustNot(cfg.DBOpen(false))
 	// defer cfg.DBClose()
+
+	// base features
+	features.LoadCommon(engine, cfg)
+	// auth
+	features.LoadAuth(engine, cfg)
+	// users
+	features.LoadUsers(engine, cfg)
 
 	return &Service{Engine: engine, Config: cfg}, nil
 }
 
-func (s *Service) Run() {
-
-	// base features
-	features.LoadCommon(s.Engine, s.Config)
-	// auth
-	features.LoadAuth(s.Engine, s.Config)
-	// users
-	features.LoadUsers(s.Engine, s.Config)
-
-	s.Engine.Run(":" + s.Config.AppPort)
+func (s *Service) GetEngine() *gin.Engine {
+	return s.Engine
 }
 
 func MustNot(err error) {

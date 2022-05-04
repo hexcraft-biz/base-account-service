@@ -8,7 +8,7 @@ func main() {
 	app, err := service.New()
 	MustNot(err)
 
-	app.Run()
+	app.GetEngine().Run(":" + app.Config.AppPort)
 }
 
 func MustNot(err error) {
