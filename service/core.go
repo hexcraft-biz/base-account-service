@@ -7,8 +7,8 @@ import (
 )
 
 type Service struct {
-	Engine *gin.Engine
-	Config *config.Config
+	engine *gin.Engine
+	config *config.Config
 }
 
 func New() (*Service, error) {
@@ -17,14 +17,8 @@ func New() (*Service, error) {
 
 	engine := gin.Default()
 	engine.SetTrustedProxies([]string{cfg.TrustProxy})
-	// TODO session cookies issue
 
-	//if cfg.AutoCreateDBSchema {
-	//	MustNot(cfg.MysqlDBInit("./sql/"))
-	//}
-
-	//MustNot(cfg.DBOpen(false))
-	// defer cfg.DBClose()
+	MustNot(cfg.DBOpen(false))
 
 	// base features
 	features.LoadCommon(engine, cfg)
@@ -33,11 +27,15 @@ func New() (*Service, error) {
 	// users
 	features.LoadUsers(engine, cfg)
 
-	return &Service{Engine: engine, Config: cfg}, nil
+	return &Service{engine: engine, config: cfg}, nil
 }
 
 func (s *Service) GetEngine() *gin.Engine {
-	return s.Engine
+	return s.engine
+}
+
+func (s *Service) GetConfig() *config.Config {
+	return s.config
 }
 
 func MustNot(err error) {

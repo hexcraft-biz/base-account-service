@@ -2,14 +2,13 @@ package models
 
 import (
 	"crypto/rand"
-	"crypto/sha512"
 	"database/sql"
 	"io"
-	"log"
 
 	"github.com/google/uuid"
 	"github.com/hexcraft-biz/model"
 	"github.com/jmoiron/sqlx"
+	"golang.org/x/crypto/bcrypt"
 )
 
 const (
@@ -22,8 +21,8 @@ const (
 type EntityUser struct {
 	*model.Prototype `dive:""`
 	Identity         string `db:"identity"`
-	Password         string `db:"password"`
-	Salt             string `db:"salt"`
+	Password         []byte `db:"password"`
+	Salt             []byte `db:"salt"`
 	Status           string `db:"status"`
 }
 
@@ -31,8 +30,8 @@ func (u *EntityUser) GetAbsUser() (*AbsUser, error) {
 	return &AbsUser{
 		ID:        *u.ID,
 		Identity:  u.Identity,
-		Password:  u.Password,
-		Salt:      u.Salt,
+		Password:  string(u.Password),
+		Salt:      string(u.Salt),
 		Status:    u.Status,
 		CreatedAt: u.Ctime.Format("2006-01-02 15:04:05"),
 		UpdatedAt: u.Mtime.Format("2006-01-02 15:04:05"),
@@ -65,17 +64,22 @@ func NewUsersTableEngine(db *sqlx.DB) *UsersTableEngine {
 func (e *UsersTableEngine) Insert(identity string, password string, status string) (*EntityUser, error) {
 	saltBytes := make([]byte, PW_SALT_BYTES)
 	if _, err := io.ReadFull(rand.Reader, saltBytes); err != nil {
-		log.Fatal(err)
+		return nil, err
 	}
 	salt := string(saltBytes)
 
-	hash := sha512.Sum512([]byte(password + salt))
+	pwdBytes := []byte(password + salt)
+
+	hashBytes, hashErr := bcrypt.GenerateFromPassword(pwdBytes, bcrypt.DefaultCost)
+	if hashErr != nil {
+		return nil, hashErr
+	}
 
 	u := &EntityUser{
 		Prototype: model.NewPrototype(),
 		Identity:  identity,
-		Password:  string(hash[:]),
-		Salt:      salt,
+		Password:  hashBytes,
+		Salt:      saltBytes,
 		Status:    status,
 	}
 
@@ -109,4 +113,22 @@ func (e *UsersTableEngine) GetByIdentity(identity string) (*EntityUser, error) {
 	}
 
 	return &row, nil
+}
+
+func (e *UsersTableEngine) ResetPwd(id *uuid.UUID, password string, saltBytes []byte) (int64, error) {
+	salt := string(saltBytes)
+
+	pwdBytes := []byte(password + salt)
+
+	hashBytes, hashErr := bcrypt.GenerateFromPassword(pwdBytes, bcrypt.DefaultCost)
+	if hashErr != nil {
+		return 0, hashErr
+	}
+
+	q := `UPDATE ` + e.TblName + ` SET password = ? WHERE id = UUID_TO_BIN(?);`
+	if rst, err := e.Exec(q, hashBytes, &id); err != nil {
+		return 0, err
+	} else {
+		return rst.RowsAffected()
+	}
 }

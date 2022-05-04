@@ -8,12 +8,6 @@ type JWT struct {
 	SigningKey []byte
 }
 
-type AuthJwtClaims struct {
-	jwt.StandardClaims
-	UserID   uint `json:"user_id"`
-	Identity uint `json:"identity"`
-}
-
 type EmailJwtClaims struct {
 	jwt.StandardClaims
 	Email string `json:"email"`
@@ -32,9 +26,9 @@ func (j *JWT) GenToken(method jwt.SigningMethod, claims jwt.Claims) (string, err
 	return token.SignedString(j.SigningKey)
 }
 
-func (j *JWT) Parse(tokenStr string, claims jwt.Claims, jwtKey interface{}) (*jwt.Token, error) {
+func (j *JWT) Parse(tokenStr string, claims jwt.Claims) (*jwt.Token, error) {
 	token, err := jwt.ParseWithClaims(tokenStr, claims, func(token *jwt.Token) (i interface{}, err error) {
-		return jwtKey, nil
+		return j.SigningKey, nil
 	})
 
 	return token, err

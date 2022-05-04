@@ -26,7 +26,8 @@ type TargetUser struct {
 func (ctrl *Users) Get() gin.HandlerFunc {
 	return func(c *gin.Context) {
 
-		// TODO get JWT from header
+		// TODO get userId from header
+
 		var targetUser TargetUser
 		if err := c.ShouldBindUri(&targetUser); err != nil {
 			c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"message": http.StatusText(http.StatusBadRequest), "results": err.Error()})

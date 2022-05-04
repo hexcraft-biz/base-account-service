@@ -1,6 +1,8 @@
 package config
 
 import (
+	"os"
+
 	"github.com/hexcraft-biz/env"
 	"github.com/jmoiron/sqlx"
 )
@@ -10,6 +12,7 @@ import (
 //================================================================
 type Env struct {
 	*env.Prototype
+	JwtSecret []byte
 }
 
 func FetchEnv() (*Env, error) {
@@ -18,11 +21,10 @@ func FetchEnv() (*Env, error) {
 	} else {
 		return &Env{
 			Prototype: e,
+			JwtSecret: []byte(os.Getenv("JWT_SECRET")),
 		}, nil
 	}
 }
-
-// TODO
 
 //================================================================
 //
