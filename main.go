@@ -10,6 +10,7 @@ import (
 
 func main() {
 	cfg, err := Load()
+	MustNot(err)
 	cfg.DBOpen(false)
 
 	appCfg := &AppConfig{
@@ -18,10 +19,7 @@ func main() {
 		TrustProxy: cfg.TrustProxy,
 	}
 
-	app, err := service.New(appCfg)
-	MustNot(err)
-
-	app.Engine.Run(":" + cfg.Env.AppPort)
+	service.New(appCfg).Run(":" + cfg.Env.AppPort)
 }
 
 func MustNot(err error) {
