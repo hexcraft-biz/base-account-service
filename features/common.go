@@ -7,10 +7,10 @@ import (
 	"github.com/hexcraft-biz/feature"
 )
 
-func LoadCommon(e *gin.Engine, cfg *config.Config) {
+func LoadCommon(e *gin.Engine, cfg config.ConfigInterFace) {
 	c := controllers.NewCommon(cfg)
 	e.NoRoute(c.NotFound())
 
-	commonV1 := feature.New(e, "/v1/healthcheck")
+	commonV1 := feature.New(e, "/healthcheck/v1")
 	commonV1.GET("/ping", c.Ping())
 }

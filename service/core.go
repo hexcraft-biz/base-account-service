@@ -1,24 +1,25 @@
 package service
 
 import (
+	"fmt"
+
 	"github.com/gin-gonic/gin"
 	"github.com/hexcraft-biz/base-account-service/config"
 	"github.com/hexcraft-biz/base-account-service/features"
 )
 
 type Service struct {
-	engine *gin.Engine
-	config *config.Config
+	*gin.Engine
 }
 
-func New() (*Service, error) {
-	cfg, err := config.Load()
-	MustNot(err)
+func New(cfg config.ConfigInterFace) (*Service, error) {
+	// TODO scope design
+	// TODO scope register
 
 	engine := gin.Default()
-	engine.SetTrustedProxies([]string{cfg.TrustProxy})
+	engine.SetTrustedProxies([]string{cfg.GetTrustProxy()})
 
-	MustNot(cfg.DBOpen(false))
+	fmt.Println(cfg, cfg.GetDB())
 
 	// base features
 	features.LoadCommon(engine, cfg)
@@ -27,15 +28,7 @@ func New() (*Service, error) {
 	// users
 	features.LoadUsers(engine, cfg)
 
-	return &Service{engine: engine, config: cfg}, nil
-}
-
-func (s *Service) GetEngine() *gin.Engine {
-	return s.engine
-}
-
-func (s *Service) GetConfig() *config.Config {
-	return s.config
+	return &Service{Engine: engine}, nil
 }
 
 func MustNot(err error) {

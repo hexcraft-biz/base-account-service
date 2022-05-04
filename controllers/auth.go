@@ -15,7 +15,7 @@ import (
 )
 
 const (
-	NEW_REGISTERED_USER_STATUS     = "suspended"
+	USER_STATUS_ENABLED            = "enabled"
 	EMAIL_CONFIRMATION_EXPIRE_MINS = 10
 	JWT_TYPE_SIGN_UP               = "signup"
 	JWT_TYPE_RESET_PWD             = "resetpwd"
@@ -23,12 +23,12 @@ const (
 
 type Auth struct {
 	*controller.Prototype
-	Config *config.Config
+	Config config.ConfigInterFace
 }
 
-func NewAuth(cfg *config.Config) *Auth {
+func NewAuth(cfg config.ConfigInterFace) *Auth {
 	return &Auth{
-		Prototype: controller.New("auth", cfg.DB),
+		Prototype: controller.New("auth", cfg.GetDB()),
 		Config:    cfg,
 	}
 }
@@ -50,7 +50,7 @@ func (ctrl *Auth) Login() gin.HandlerFunc {
 		}
 
 		if entityRes, err := models.NewUsersTableEngine(ctrl.DB).GetByIdentity(params.Identity); err != nil {
-			c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"message": http.StatusText(http.StatusInternalServerError), "results": err.Error()})
+			c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
 			return
 		} else {
 			if entityRes == nil {
@@ -63,6 +63,8 @@ func (ctrl *Auth) Login() gin.HandlerFunc {
 					c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"message": "Password is wrong."})
 					return
 				}
+
+				// TODO if status is not enable, reject 401
 
 				if absRes, absErr := entityRes.GetAbsUser(); absErr != nil {
 					c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"message": absErr.Error()})
@@ -108,7 +110,7 @@ func (ctrl *Auth) SignUpEmailComfirm() gin.HandlerFunc {
 		expiresAt := nowTime.Add(EMAIL_CONFIRMATION_EXPIRE_MINS * time.Minute).Unix()
 		issuedAt := nowTime.Unix()
 
-		miscJWT := misc.NewJWT(ctrl.Config.Env.JwtSecret)
+		miscJWT := misc.NewJWT(ctrl.Config.GetJWTSecret())
 		tokenString, err := miscJWT.GenToken(jwt.SigningMethodHS512, misc.EmailJwtClaims{
 			StandardClaims: jwt.StandardClaims{
 				Subject:   params.Email,
@@ -151,7 +153,7 @@ func (ctrl *Auth) SignUpTokenVerify() gin.HandlerFunc {
 		}
 
 		var claims misc.EmailJwtClaims
-		miscJWT := misc.NewJWT(ctrl.Config.Env.JwtSecret)
+		miscJWT := misc.NewJWT(ctrl.Config.GetJWTSecret())
 		token, err := miscJWT.Parse(params.Token, &claims)
 
 		if err != nil {
@@ -185,7 +187,7 @@ func (ctrl *Auth) SignUp() gin.HandlerFunc {
 		}
 
 		var claims misc.EmailJwtClaims
-		miscJWT := misc.NewJWT(ctrl.Config.Env.JwtSecret)
+		miscJWT := misc.NewJWT(ctrl.Config.GetJWTSecret())
 		token, err := miscJWT.Parse(params.Token, &claims)
 
 		if err != nil {
@@ -197,7 +199,7 @@ func (ctrl *Auth) SignUp() gin.HandlerFunc {
 			return
 		}
 
-		if entityRes, err := models.NewUsersTableEngine(ctrl.DB).Insert(claims.Email, params.Password, NEW_REGISTERED_USER_STATUS); err != nil {
+		if entityRes, err := models.NewUsersTableEngine(ctrl.DB).Insert(claims.Email, params.Password, USER_STATUS_ENABLED); err != nil {
 			if myErr, ok := err.(*mysql.MySQLError); ok && myErr.Number == 1062 {
 				c.JSON(http.StatusConflict, gin.H{"message": http.StatusText(http.StatusConflict)})
 			} else {
@@ -245,7 +247,7 @@ func (ctrl *Auth) ResetPwdComfirm() gin.HandlerFunc {
 		expiresAt := nowTime.Add(EMAIL_CONFIRMATION_EXPIRE_MINS * time.Minute).Unix()
 		issuedAt := nowTime.Unix()
 
-		miscJWT := misc.NewJWT(ctrl.Config.Env.JwtSecret)
+		miscJWT := misc.NewJWT(ctrl.Config.GetJWTSecret())
 		tokenString, err := miscJWT.GenToken(jwt.SigningMethodHS512, misc.EmailJwtClaims{
 			StandardClaims: jwt.StandardClaims{
 				Subject:   params.Email,
@@ -288,7 +290,7 @@ func (ctrl *Auth) ResetPwdTokenVerify() gin.HandlerFunc {
 		}
 
 		var claims misc.EmailJwtClaims
-		miscJWT := misc.NewJWT(ctrl.Config.Env.JwtSecret)
+		miscJWT := misc.NewJWT(ctrl.Config.GetJWTSecret())
 		token, err := miscJWT.Parse(params.Token, &claims)
 
 		if err != nil {
@@ -322,7 +324,7 @@ func (ctrl *Auth) ChangePassword() gin.HandlerFunc {
 		}
 
 		var claims misc.EmailJwtClaims
-		miscJWT := misc.NewJWT(ctrl.Config.Env.JwtSecret)
+		miscJWT := misc.NewJWT(ctrl.Config.GetJWTSecret())
 		token, err := miscJWT.Parse(params.Token, &claims)
 
 		if err != nil {
@@ -337,13 +339,14 @@ func (ctrl *Auth) ChangePassword() gin.HandlerFunc {
 		usersEngine := models.NewUsersTableEngine(ctrl.DB)
 
 		if entityRes, err := usersEngine.GetByIdentity(claims.Email); err != nil {
-			c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"message": http.StatusText(http.StatusInternalServerError), "results": err.Error()})
+			c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
 			return
 		} else {
 			if entityRes == nil {
 				c.AbortWithStatusJSON(http.StatusNotFound, gin.H{"message": http.StatusText(http.StatusNotFound)})
 				return
 			} else {
+				// TODO next version about password log
 				saltedPwd := append([]byte(params.Password), entityRes.Salt...)
 				compareErr := bcrypt.CompareHashAndPassword(entityRes.Password, saltedPwd)
 				if compareErr == nil {

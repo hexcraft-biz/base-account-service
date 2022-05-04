@@ -7,12 +7,17 @@ import (
 	"github.com/hexcraft-biz/feature"
 )
 
-func LoadAuth(e *gin.Engine, cfg *config.Config) {
+func LoadAuth(e *gin.Engine, cfg config.ConfigInterFace) {
 	c := controllers.NewAuth(cfg)
 
 	// TODO middleware check scope
+	/*
+		for client credentials
+		if scope no match, reject 403
+		scope : user.prototype.auth
+	*/
 
-	authV1 := feature.New(e, "/v1/auth")
+	authV1 := feature.New(e, "/auth/v1")
 
 	authV1.POST("/login", c.Login()) // ok
 

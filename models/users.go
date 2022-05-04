@@ -132,3 +132,12 @@ func (e *UsersTableEngine) ResetPwd(id *uuid.UUID, password string, saltBytes []
 		return rst.RowsAffected()
 	}
 }
+
+func (e *UsersTableEngine) UpdateStatus(id *uuid.UUID, status string) (int64, error) {
+	q := `UPDATE ` + e.TblName + ` SET status = ? WHERE id = UUID_TO_BIN(?);`
+	if rst, err := e.Exec(q, status, &id); err != nil {
+		return 0, err
+	} else {
+		return rst.RowsAffected()
+	}
+}
