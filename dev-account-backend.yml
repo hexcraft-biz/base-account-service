@@ -16,7 +16,7 @@ services:
     restart: on-failure
     depends_on:
       - account-db
-      - redis
+      # - redis
     networks:
       - intranet
 
@@ -33,18 +33,18 @@ services:
       - "dev_account_db:/var/lib/mysql"
     networks:
       - intranet
-  redis:
-    image: redis:5.0.5-alpine
-    container_name: dev-shared-redis
-    restart: always
-    environment:
-      - "ENV=develop"
-    ports:
-      - "6379:6379"
-    expose:
-      - "6379"
-    networks:
-      - intranet
+  # redis:
+  #   image: redis:5.0.5-alpine
+  #   container_name: dev-shared-redis
+  #   restart: always
+  #   environment:
+  #     - "ENV=develop"
+  #   ports:
+  #     - "6379:6379"
+  #   expose:
+  #     - "6379"
+  #   networks:
+  #     - intranet
   phpmyadmin:
     container_name: dev-shared-pma
     image: phpmyadmin/phpmyadmin

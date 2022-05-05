@@ -17,12 +17,13 @@ func main() {
 	sc := &serviceConfig.Config{
 		DB: cfg.DB,
 		Env: &serviceConfig.Env{
-			JWTSecret:    []byte(os.Getenv("JWT_SECRET")),
-			TrustProxy:   cfg.TrustProxy,
-			SMTPHost:     os.Getenv("SMTP_HOST"),
-			SMTPPort:     os.Getenv("SMTP_PORT"),
-			SMTPUsername: os.Getenv("SMTP_USERNAME"),
-			SMTPPassword: os.Getenv("SMTP_PASSWORD"),
+			JWTSecret:          []byte(os.Getenv("JWT_SECRET")),
+			TrustProxy:         cfg.TrustProxy,
+			SMTPHost:           os.Getenv("SMTP_HOST"),
+			SMTPPort:           os.Getenv("SMTP_PORT"),
+			SMTPUsername:       os.Getenv("SMTP_USERNAME"),
+			SMTPPassword:       os.Getenv("SMTP_PASSWORD"),
+			OAuth2HeaderPrefix: os.Getenv("OAUTH2_HEADER_PREFIX"),
 		},
 	}
 

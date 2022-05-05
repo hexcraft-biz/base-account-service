@@ -8,10 +8,11 @@ type Config struct {
 }
 
 type Env struct {
-	JWTSecret    []byte
-	TrustProxy   string
-	SMTPHost     string
-	SMTPPort     string
-	SMTPUsername string
-	SMTPPassword string
+	JWTSecret          []byte
+	TrustProxy         string
+	SMTPHost           string
+	SMTPPort           string
+	SMTPUsername       string
+	SMTPPassword       string
+	OAuth2HeaderPrefix string
 }
