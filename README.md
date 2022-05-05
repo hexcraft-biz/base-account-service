@@ -4,7 +4,7 @@
 
 ```sh
 # assume the following codes in main.go file
-$ cat example.go
+$ cat main.go
 ```
 
 ```go
