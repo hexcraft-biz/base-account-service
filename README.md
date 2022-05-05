@@ -16,8 +16,8 @@ import (
 )
 
 func main() {
-	sc := &serviceConfig.Config{
-		DB: cfg.DB,
+	sc := &config.Config{
+		DB: DB,
 		Env: &serviceConfig.Env{
 			JWTSecret:          []byte(os.Getenv("JWT_SECRET")),
 			TrustProxy:         os.Getenv("TRUST_PROXY"),
@@ -35,6 +35,6 @@ func main() {
 	// Do something...
 	// Like using gin.Engine
 
-	engine.Run(":" + cfg.Env.AppPort)
+	engine.Run(":" + appPort)
 }
 ```
