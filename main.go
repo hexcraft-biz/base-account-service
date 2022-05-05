@@ -3,6 +3,7 @@ package main
 import (
 	"os"
 
+	serviceConfig "github.com/hexcraft-biz/base-account-service/config"
 	"github.com/hexcraft-biz/base-account-service/service"
 	"github.com/hexcraft-biz/env"
 	"github.com/jmoiron/sqlx"
@@ -13,13 +14,19 @@ func main() {
 	MustNot(err)
 	cfg.DBOpen(false)
 
-	appCfg := &AppConfig{
-		DB:         cfg.DB,
-		JWTSecret:  cfg.Env.JwtSecret,
-		TrustProxy: cfg.TrustProxy,
+	sc := &serviceConfig.Config{
+		DB: cfg.DB,
+		Env: &serviceConfig.Env{
+			JWTSecret:    []byte(os.Getenv("JWT_SECRET")),
+			TrustProxy:   cfg.TrustProxy,
+			SMTPHost:     os.Getenv("SMTP_HOST"),
+			SMTPPort:     os.Getenv("SMTP_PORT"),
+			SMTPUsername: os.Getenv("SMTP_USERNAME"),
+			SMTPPassword: os.Getenv("SMTP_PASSWORD"),
+		},
 	}
 
-	service.New(appCfg).Run(":" + cfg.Env.AppPort)
+	service.New(sc).Run(":" + cfg.Env.AppPort)
 }
 
 func MustNot(err error) {
@@ -29,32 +36,10 @@ func MustNot(err error) {
 }
 
 //================================================================
-// AppConfig implement ConfigInterFace
-//================================================================
-type AppConfig struct {
-	DB         *sqlx.DB
-	JWTSecret  []byte
-	TrustProxy string
-}
-
-func (ac *AppConfig) GetDB() *sqlx.DB {
-	return ac.DB
-}
-
-func (ac *AppConfig) GetJWTSecret() []byte {
-	return ac.JWTSecret
-}
-
-func (ac *AppConfig) GetTrustProxy() string {
-	return ac.TrustProxy
-}
-
-//================================================================
 // Env
 //================================================================
 type Env struct {
 	*env.Prototype
-	JwtSecret []byte
 }
 
 func FetchEnv() (*Env, error) {
@@ -63,7 +48,6 @@ func FetchEnv() (*Env, error) {
 	} else {
 		return &Env{
 			Prototype: e,
-			JwtSecret: []byte(os.Getenv("JWT_SECRET")),
 		}, nil
 	}
 }

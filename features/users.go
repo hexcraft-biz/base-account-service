@@ -7,14 +7,14 @@ import (
 	"github.com/hexcraft-biz/feature"
 )
 
-func LoadUsers(e *gin.Engine, cfg config.ConfigInterFace) {
+func LoadUsers(e *gin.Engine, cfg *config.Config) {
 	c := controllers.NewUsers(cfg)
 
 	usersV1 := feature.New(e, "/users/v1")
 	// TODO middleware check scope & header
 	/*
 		if scope no match, reject 403
-		scope : user.prototype.self user.prototype.self.readonly
+		scope : user.prototype.self
 
 		if header not contain these, reject 401
 		X-Kmk-Authenticated-User-Email

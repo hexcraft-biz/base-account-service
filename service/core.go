@@ -6,12 +6,12 @@ import (
 	"github.com/hexcraft-biz/base-account-service/features"
 )
 
-func New(cfg config.ConfigInterFace) *gin.Engine {
+func New(cfg *config.Config) *gin.Engine {
 	// TODO scope design
 	// TODO scope register
 
 	engine := gin.Default()
-	engine.SetTrustedProxies([]string{cfg.GetTrustProxy()})
+	engine.SetTrustedProxies([]string{cfg.Env.TrustProxy})
 
 	// base features
 	features.LoadCommon(engine, cfg)

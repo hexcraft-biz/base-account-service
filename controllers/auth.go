@@ -23,12 +23,12 @@ const (
 
 type Auth struct {
 	*controller.Prototype
-	Config config.ConfigInterFace
+	Config *config.Config
 }
 
-func NewAuth(cfg config.ConfigInterFace) *Auth {
+func NewAuth(cfg *config.Config) *Auth {
 	return &Auth{
-		Prototype: controller.New("auth", cfg.GetDB()),
+		Prototype: controller.New("auth", cfg.DB),
 		Config:    cfg,
 	}
 }
@@ -64,7 +64,10 @@ func (ctrl *Auth) Login() gin.HandlerFunc {
 					return
 				}
 
-				// TODO if status is not enable, reject 401
+				if entityRes.Status != USER_STATUS_ENABLED {
+					c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"message": "This account is not enabled."})
+					return
+				}
 
 				if absRes, absErr := entityRes.GetAbsUser(); absErr != nil {
 					c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"message": absErr.Error()})
@@ -81,18 +84,19 @@ func (ctrl *Auth) Login() gin.HandlerFunc {
 //================================================================
 // SignUp
 //================================================================
-type signUpEmailComfirmParams struct {
-	Email string `json:"email" binding:"required,email,min=1,max=128"`
+type signUpEmailConfirmParams struct {
+	Email         string `json:"email" binding:"required,email,min=1,max=128"`
+	VerifyPageUrl string `json:"verify_page_url" binding:"required,url"`
 }
 
-type signUpEmailComfirmResp struct {
+type signUpEmailConfirmResp struct {
 	Token string `json:"token"`
 }
 
-func (ctrl *Auth) SignUpEmailComfirm() gin.HandlerFunc {
+func (ctrl *Auth) SignUpEmailConfirm() gin.HandlerFunc {
 	return func(c *gin.Context) {
 
-		var params signUpEmailComfirmParams
+		var params signUpEmailConfirmParams
 		if err := c.ShouldBindJSON(&params); err != nil {
 			c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"message": err.Error()})
 			return
@@ -110,7 +114,7 @@ func (ctrl *Auth) SignUpEmailComfirm() gin.HandlerFunc {
 		expiresAt := nowTime.Add(EMAIL_CONFIRMATION_EXPIRE_MINS * time.Minute).Unix()
 		issuedAt := nowTime.Unix()
 
-		miscJWT := misc.NewJWT(ctrl.Config.GetJWTSecret())
+		miscJWT := misc.NewJWT(ctrl.Config.Env.JWTSecret)
 		tokenString, err := miscJWT.GenToken(jwt.SigningMethodHS512, misc.EmailJwtClaims{
 			StandardClaims: jwt.StandardClaims{
 				Subject:   params.Email,
@@ -125,12 +129,18 @@ func (ctrl *Auth) SignUpEmailComfirm() gin.HandlerFunc {
 			return
 		}
 
-		// TODO Send Comfirmation Email
-		// c.JSON(http.StatusAccepted, gin.H{"message": http.StatusText(http.StatusAccepted)})
+		email := misc.NewEmail(
+			ctrl.Config.Env.SMTPHost,
+			ctrl.Config.Env.SMTPPort,
+			ctrl.Config.Env.SMTPUsername,
+			ctrl.Config.Env.SMTPPassword,
+		)
+		to := []string{params.Email}
+		subject := "Signup Email Confirmation"
+		body := `<html><body>This is email confirmation, please follow this <a href="` + params.VerifyPageUrl + tokenString + `">link</a> to complete sign up flow.</body></html>`
+		email.SendHTML(to, subject, body)
 
-		c.JSON(http.StatusOK, signUpEmailComfirmResp{
-			Token: tokenString,
-		})
+		c.JSON(http.StatusAccepted, gin.H{"message": http.StatusText(http.StatusAccepted)})
 		return
 	}
 }
@@ -153,7 +163,7 @@ func (ctrl *Auth) SignUpTokenVerify() gin.HandlerFunc {
 		}
 
 		var claims misc.EmailJwtClaims
-		miscJWT := misc.NewJWT(ctrl.Config.GetJWTSecret())
+		miscJWT := misc.NewJWT(ctrl.Config.Env.JWTSecret)
 		token, err := miscJWT.Parse(params.Token, &claims)
 
 		if err != nil {
@@ -187,7 +197,7 @@ func (ctrl *Auth) SignUp() gin.HandlerFunc {
 		}
 
 		var claims misc.EmailJwtClaims
-		miscJWT := misc.NewJWT(ctrl.Config.GetJWTSecret())
+		miscJWT := misc.NewJWT(ctrl.Config.Env.JWTSecret)
 		token, err := miscJWT.Parse(params.Token, &claims)
 
 		if err != nil {
@@ -218,18 +228,19 @@ func (ctrl *Auth) SignUp() gin.HandlerFunc {
 //================================================================
 // ResetPassword
 //================================================================
-type resetPwdComfirmParams struct {
-	Email string `json:"email" binding:"required,email,min=1,max=128"`
+type resetPwdConfirmParams struct {
+	Email         string `json:"email" binding:"required,email,min=1,max=128"`
+	VerifyPageUrl string `json:"verify_page_url" binding:"required,url"`
 }
 
-type resetPwdComfirmResp struct {
+type resetPwdConfirmResp struct {
 	Token string `json:"token"`
 }
 
-func (ctrl *Auth) ResetPwdComfirm() gin.HandlerFunc {
+func (ctrl *Auth) ResetPwdConfirm() gin.HandlerFunc {
 	return func(c *gin.Context) {
 
-		var params resetPwdComfirmParams
+		var params resetPwdConfirmParams
 		if err := c.ShouldBindJSON(&params); err != nil {
 			c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"message": err.Error()})
 			return
@@ -247,7 +258,7 @@ func (ctrl *Auth) ResetPwdComfirm() gin.HandlerFunc {
 		expiresAt := nowTime.Add(EMAIL_CONFIRMATION_EXPIRE_MINS * time.Minute).Unix()
 		issuedAt := nowTime.Unix()
 
-		miscJWT := misc.NewJWT(ctrl.Config.GetJWTSecret())
+		miscJWT := misc.NewJWT(ctrl.Config.Env.JWTSecret)
 		tokenString, err := miscJWT.GenToken(jwt.SigningMethodHS512, misc.EmailJwtClaims{
 			StandardClaims: jwt.StandardClaims{
 				Subject:   params.Email,
@@ -262,12 +273,18 @@ func (ctrl *Auth) ResetPwdComfirm() gin.HandlerFunc {
 			return
 		}
 
-		// TODO Send Comfirmation Email
-		// c.JSON(http.StatusAccepted, gin.H{"message": http.StatusText(http.StatusAccepted)})
+		email := misc.NewEmail(
+			ctrl.Config.Env.SMTPHost,
+			ctrl.Config.Env.SMTPPort,
+			ctrl.Config.Env.SMTPUsername,
+			ctrl.Config.Env.SMTPPassword,
+		)
+		to := []string{params.Email}
+		subject := "Reset Password Email Confirmation"
+		body := `<html><body>This is email confirmation, please follow this <a href="` + params.VerifyPageUrl + tokenString + `">link</a> to complete reset password flow.</body></html>`
+		email.SendHTML(to, subject, body)
 
-		c.JSON(http.StatusOK, resetPwdComfirmResp{
-			Token: tokenString,
-		})
+		c.JSON(http.StatusAccepted, gin.H{"message": http.StatusText(http.StatusAccepted)})
 		return
 	}
 }
@@ -290,7 +307,7 @@ func (ctrl *Auth) ResetPwdTokenVerify() gin.HandlerFunc {
 		}
 
 		var claims misc.EmailJwtClaims
-		miscJWT := misc.NewJWT(ctrl.Config.GetJWTSecret())
+		miscJWT := misc.NewJWT(ctrl.Config.Env.JWTSecret)
 		token, err := miscJWT.Parse(params.Token, &claims)
 
 		if err != nil {
@@ -324,7 +341,7 @@ func (ctrl *Auth) ChangePassword() gin.HandlerFunc {
 		}
 
 		var claims misc.EmailJwtClaims
-		miscJWT := misc.NewJWT(ctrl.Config.GetJWTSecret())
+		miscJWT := misc.NewJWT(ctrl.Config.Env.JWTSecret)
 		token, err := miscJWT.Parse(params.Token, &claims)
 
 		if err != nil {
