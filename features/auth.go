@@ -8,7 +8,7 @@ import (
 	"github.com/hexcraft-biz/feature"
 )
 
-func LoadAuth(e *gin.Engine, cfg *config.Config, scopeName string) {
+func LoadAuth(e *gin.Engine, cfg config.ConfigInterFace, scopeName string) {
 	c := controllers.NewAuth(cfg)
 
 	authV1 := feature.New(e, "/auth/v1")

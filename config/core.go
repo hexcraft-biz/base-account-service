@@ -2,17 +2,13 @@ package config
 
 import "github.com/jmoiron/sqlx"
 
-type Config struct {
-	DB  *sqlx.DB
-	Env *Env
-}
-
-type Env struct {
-	JWTSecret          []byte
-	TrustProxy         string
-	SMTPHost           string
-	SMTPPort           string
-	SMTPUsername       string
-	SMTPPassword       string
-	OAuth2HeaderPrefix string
+type ConfigInterFace interface {
+	GetDB() *sqlx.DB
+	GetJWTSecret() []byte
+	GetTrustProxy() string
+	GetSMTPHost() string
+	GetSMTPPort() string
+	GetSMTPUsername() string
+	GetSMTPPassword() string
+	GetOAuth2HeaderPrefix() string
 }

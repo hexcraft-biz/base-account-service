@@ -3,7 +3,6 @@ package main
 import (
 	"os"
 
-	serviceConfig "github.com/hexcraft-biz/base-account-service/config"
 	"github.com/hexcraft-biz/base-account-service/service"
 	"github.com/hexcraft-biz/env"
 	"github.com/jmoiron/sqlx"
@@ -14,26 +13,56 @@ func main() {
 	MustNot(err)
 	cfg.DBOpen(false)
 
-	sc := &serviceConfig.Config{
+	appCfg := &AppConfig{
 		DB: cfg.DB,
-		Env: &serviceConfig.Env{
-			JWTSecret:          []byte(os.Getenv("JWT_SECRET")),
-			TrustProxy:         cfg.TrustProxy,
-			SMTPHost:           os.Getenv("SMTP_HOST"),
-			SMTPPort:           os.Getenv("SMTP_PORT"),
-			SMTPUsername:       os.Getenv("SMTP_USERNAME"),
-			SMTPPassword:       os.Getenv("SMTP_PASSWORD"),
-			OAuth2HeaderPrefix: os.Getenv("OAUTH2_HEADER_PREFIX"),
-		},
 	}
 
-	service.New(sc).Run(":" + cfg.Env.AppPort)
+	service.New(appCfg).Run(":" + cfg.Env.AppPort)
 }
 
 func MustNot(err error) {
 	if err != nil {
 		panic(err.Error())
 	}
+}
+
+//================================================================
+// AppConfig implement ConfigInterFace
+//================================================================
+type AppConfig struct {
+	DB *sqlx.DB
+}
+
+func (ac *AppConfig) GetDB() *sqlx.DB {
+	return ac.DB
+}
+
+func (ac *AppConfig) GetJWTSecret() []byte {
+	return []byte(os.Getenv("JWT_SECRET"))
+}
+
+func (ac *AppConfig) GetTrustProxy() string {
+	return os.Getenv("TRUST_PROXY")
+}
+
+func (ac *AppConfig) GetSMTPHost() string {
+	return os.Getenv("SMTP_HOST")
+}
+
+func (ac *AppConfig) GetSMTPPort() string {
+	return os.Getenv("SMTP_PORT")
+}
+
+func (ac *AppConfig) GetSMTPUsername() string {
+	return os.Getenv("SMTP_USERNAME")
+}
+
+func (ac *AppConfig) GetSMTPPassword() string {
+	return os.Getenv("SMTP_PASSWORD")
+}
+
+func (ac *AppConfig) GetOAuth2HeaderPrefix() string {
+	return os.Getenv("OAUTH2_HEADER_PREFIX")
 }
 
 //================================================================

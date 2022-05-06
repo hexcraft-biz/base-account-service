@@ -7,7 +7,7 @@ import (
 	"github.com/hexcraft-biz/feature"
 )
 
-func LoadCommon(e *gin.Engine, cfg *config.Config) {
+func LoadCommon(e *gin.Engine, cfg config.ConfigInterFace) {
 	c := controllers.NewCommon(cfg)
 	e.NoRoute(c.NotFound())
 

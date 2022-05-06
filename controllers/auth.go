@@ -23,12 +23,12 @@ const (
 
 type Auth struct {
 	*controller.Prototype
-	Config *config.Config
+	Config config.ConfigInterFace
 }
 
-func NewAuth(cfg *config.Config) *Auth {
+func NewAuth(cfg config.ConfigInterFace) *Auth {
 	return &Auth{
-		Prototype: controller.New("auth", cfg.DB),
+		Prototype: controller.New("auth", cfg.GetDB()),
 		Config:    cfg,
 	}
 }
@@ -114,7 +114,7 @@ func (ctrl *Auth) SignUpEmailConfirm() gin.HandlerFunc {
 		expiresAt := nowTime.Add(EMAIL_CONFIRMATION_EXPIRE_MINS * time.Minute).Unix()
 		issuedAt := nowTime.Unix()
 
-		miscJWT := misc.NewJWT(ctrl.Config.Env.JWTSecret)
+		miscJWT := misc.NewJWT(ctrl.Config.GetJWTSecret())
 		tokenString, err := miscJWT.GenToken(jwt.SigningMethodHS512, misc.EmailJwtClaims{
 			StandardClaims: jwt.StandardClaims{
 				Subject:   params.Email,
@@ -130,10 +130,10 @@ func (ctrl *Auth) SignUpEmailConfirm() gin.HandlerFunc {
 		}
 
 		email := misc.NewEmail(
-			ctrl.Config.Env.SMTPHost,
-			ctrl.Config.Env.SMTPPort,
-			ctrl.Config.Env.SMTPUsername,
-			ctrl.Config.Env.SMTPPassword,
+			ctrl.Config.GetSMTPHost(),
+			ctrl.Config.GetSMTPPort(),
+			ctrl.Config.GetSMTPUsername(),
+			ctrl.Config.GetSMTPPassword(),
 		)
 		to := []string{params.Email}
 		subject := "Signup Email Confirmation"
@@ -163,7 +163,7 @@ func (ctrl *Auth) SignUpTokenVerify() gin.HandlerFunc {
 		}
 
 		var claims misc.EmailJwtClaims
-		miscJWT := misc.NewJWT(ctrl.Config.Env.JWTSecret)
+		miscJWT := misc.NewJWT(ctrl.Config.GetJWTSecret())
 		token, err := miscJWT.Parse(params.Token, &claims)
 
 		if err != nil {
@@ -197,7 +197,7 @@ func (ctrl *Auth) SignUp() gin.HandlerFunc {
 		}
 
 		var claims misc.EmailJwtClaims
-		miscJWT := misc.NewJWT(ctrl.Config.Env.JWTSecret)
+		miscJWT := misc.NewJWT(ctrl.Config.GetJWTSecret())
 		token, err := miscJWT.Parse(params.Token, &claims)
 
 		if err != nil {
@@ -258,7 +258,7 @@ func (ctrl *Auth) ResetPwdConfirm() gin.HandlerFunc {
 		expiresAt := nowTime.Add(EMAIL_CONFIRMATION_EXPIRE_MINS * time.Minute).Unix()
 		issuedAt := nowTime.Unix()
 
-		miscJWT := misc.NewJWT(ctrl.Config.Env.JWTSecret)
+		miscJWT := misc.NewJWT(ctrl.Config.GetJWTSecret())
 		tokenString, err := miscJWT.GenToken(jwt.SigningMethodHS512, misc.EmailJwtClaims{
 			StandardClaims: jwt.StandardClaims{
 				Subject:   params.Email,
@@ -274,10 +274,10 @@ func (ctrl *Auth) ResetPwdConfirm() gin.HandlerFunc {
 		}
 
 		email := misc.NewEmail(
-			ctrl.Config.Env.SMTPHost,
-			ctrl.Config.Env.SMTPPort,
-			ctrl.Config.Env.SMTPUsername,
-			ctrl.Config.Env.SMTPPassword,
+			ctrl.Config.GetSMTPHost(),
+			ctrl.Config.GetSMTPPort(),
+			ctrl.Config.GetSMTPUsername(),
+			ctrl.Config.GetSMTPPassword(),
 		)
 		to := []string{params.Email}
 		subject := "Reset Password Email Confirmation"
@@ -307,7 +307,7 @@ func (ctrl *Auth) ResetPwdTokenVerify() gin.HandlerFunc {
 		}
 
 		var claims misc.EmailJwtClaims
-		miscJWT := misc.NewJWT(ctrl.Config.Env.JWTSecret)
+		miscJWT := misc.NewJWT(ctrl.Config.GetJWTSecret())
 		token, err := miscJWT.Parse(params.Token, &claims)
 
 		if err != nil {
@@ -341,7 +341,7 @@ func (ctrl *Auth) ChangePassword() gin.HandlerFunc {
 		}
 
 		var claims misc.EmailJwtClaims
-		miscJWT := misc.NewJWT(ctrl.Config.Env.JWTSecret)
+		miscJWT := misc.NewJWT(ctrl.Config.GetJWTSecret())
 		token, err := miscJWT.Parse(params.Token, &claims)
 
 		if err != nil {

@@ -11,7 +11,7 @@ import (
 	"github.com/hexcraft-biz/base-account-service/config"
 )
 
-func OAuth2PKCE(cfg *config.Config) gin.HandlerFunc {
+func OAuth2PKCE(cfg config.ConfigInterFace) gin.HandlerFunc {
 	/*
 		X-{prefix}-Authenticated-User-Email
 		X-{prefix}-Authenticated-User-Id
@@ -19,10 +19,12 @@ func OAuth2PKCE(cfg *config.Config) gin.HandlerFunc {
 		X-{prefix}-Client-Scope
 	*/
 	return func(ctx *gin.Context) {
-		authUserEmail := ctx.Request.Header.Get("X-" + cfg.Env.OAuth2HeaderPrefix + "-Authenticated-User-Email")
-		authUserId := ctx.Request.Header.Get("X-" + cfg.Env.OAuth2HeaderPrefix + "-Authenticated-User-Id")
-		clientId := ctx.Request.Header.Get("X-" + cfg.Env.OAuth2HeaderPrefix + "-Client-Id")
-		clientScope := ctx.Request.Header.Get("X-" + cfg.Env.OAuth2HeaderPrefix + "-Client-Scope")
+		prefix := cfg.GetOAuth2HeaderPrefix()
+
+		authUserEmail := ctx.Request.Header.Get("X-" + prefix + "-Authenticated-User-Email")
+		authUserId := ctx.Request.Header.Get("X-" + prefix + "-Authenticated-User-Id")
+		clientId := ctx.Request.Header.Get("X-" + prefix + "-Client-Id")
+		clientScope := ctx.Request.Header.Get("X-" + prefix + "-Client-Scope")
 
 		if authUserEmail != "" {
 			if _, err := mail.ParseAddress(authUserEmail); err != nil {
@@ -56,14 +58,16 @@ func OAuth2PKCE(cfg *config.Config) gin.HandlerFunc {
 	}
 }
 
-func OAuth2ClientCredentials(cfg *config.Config) gin.HandlerFunc {
+func OAuth2ClientCredentials(cfg config.ConfigInterFace) gin.HandlerFunc {
 	/*
 		X-{prefix}-Client-Id
 		X-{prefix}-Client-Scope
 	*/
 	return func(ctx *gin.Context) {
-		clientId := ctx.Request.Header.Get("X-" + cfg.Env.OAuth2HeaderPrefix + "-Client-Id")
-		clientScope := ctx.Request.Header.Get("X-" + cfg.Env.OAuth2HeaderPrefix + "-Client-Scope")
+		prefix := cfg.GetOAuth2HeaderPrefix()
+
+		clientId := ctx.Request.Header.Get("X-" + prefix + "-Client-Id")
+		clientScope := ctx.Request.Header.Get("X-" + prefix + "-Client-Scope")
 
 		if clientId == "" {
 			ctx.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"message": http.StatusText(http.StatusUnauthorized)})
@@ -77,12 +81,14 @@ func OAuth2ClientCredentials(cfg *config.Config) gin.HandlerFunc {
 	}
 }
 
-func IsSelf(cfg *config.Config) gin.HandlerFunc {
+func IsSelf(cfg config.ConfigInterFace) gin.HandlerFunc {
 	/*
 		X-{prefix}-Authenticated-User-Id
 	*/
 	return func(ctx *gin.Context) {
-		authUserId := ctx.Request.Header.Get("X-" + cfg.Env.OAuth2HeaderPrefix + "-Authenticated-User-Id")
+		prefix := cfg.GetOAuth2HeaderPrefix()
+
+		authUserId := ctx.Request.Header.Get("X-" + prefix + "-Authenticated-User-Id")
 
 		if authUserId != "" {
 			if _, err := uuid.Parse(authUserId); err != nil {
@@ -102,12 +108,14 @@ func IsSelf(cfg *config.Config) gin.HandlerFunc {
 	}
 }
 
-func ScopeVerify(cfg *config.Config, scopeName string) gin.HandlerFunc {
+func ScopeVerify(cfg config.ConfigInterFace, scopeName string) gin.HandlerFunc {
 	/*
 		X-{prefix}-Client-Scope
 	*/
 	return func(ctx *gin.Context) {
-		clientScope := ctx.Request.Header.Get("X-" + cfg.Env.OAuth2HeaderPrefix + "-Client-Scope")
+		prefix := cfg.GetOAuth2HeaderPrefix()
+
+		clientScope := ctx.Request.Header.Get("X-" + prefix + "-Client-Scope")
 
 		if clientScope == "" {
 			ctx.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"message": http.StatusText(http.StatusUnauthorized)})

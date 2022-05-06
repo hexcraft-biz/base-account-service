@@ -11,25 +11,15 @@ $ cat main.go
 package main
 
 import (
-	"github.com/hexcraft-biz/base-account-service/config"
 	"github.com/hexcraft-biz/base-account-service/service"
 )
 
 func main() {
-	sc := &config.Config{
-		DB: DB,
-		Env: &serviceConfig.Env{
-			JWTSecret:          []byte(os.Getenv("JWT_SECRET")),
-			TrustProxy:         os.Getenv("TRUST_PROXY"),
-			SMTPHost:           os.Getenv("SMTP_HOST"),
-			SMTPPort:           os.Getenv("SMTP_PORT"),
-			SMTPUsername:       os.Getenv("SMTP_USERNAME"),
-			SMTPPassword:       os.Getenv("SMTP_PASSWORD"),
-			OAuth2HeaderPrefix: os.Getenv("OAUTH2_HEADER_PREFIX"),
-		},
+	appCfg := &AppConfig{
+		DB: cfg.DB,
 	}
 
-	engine := service.New(sc)
+	engine := service.New(appCfg)
 
 	// TODO
 	// Do something...
@@ -37,4 +27,44 @@ func main() {
 
 	engine.Run(":" + appPort)
 }
+
+//================================================================
+// AppConfig implement ConfigInterFace
+//================================================================
+type AppConfig struct {
+	DB *sqlx.DB
+}
+
+func (ac *AppConfig) GetDB() *sqlx.DB {
+	return ac.DB
+}
+
+func (ac *AppConfig) GetJWTSecret() []byte {
+	return []byte(os.Getenv("JWT_SECRET"))
+}
+
+func (ac *AppConfig) GetTrustProxy() string {
+	return os.Getenv("TRUST_PROXY")
+}
+
+func (ac *AppConfig) GetSMTPHost() string {
+	return os.Getenv("SMTP_HOST")
+}
+
+func (ac *AppConfig) GetSMTPPort() string {
+	return os.Getenv("SMTP_PORT")
+}
+
+func (ac *AppConfig) GetSMTPUsername() string {
+	return os.Getenv("SMTP_USERNAME")
+}
+
+func (ac *AppConfig) GetSMTPPassword() string {
+	return os.Getenv("SMTP_PASSWORD")
+}
+
+func (ac *AppConfig) GetOAuth2HeaderPrefix() string {
+	return os.Getenv("OAUTH2_HEADER_PREFIX")
+}
+
 ```

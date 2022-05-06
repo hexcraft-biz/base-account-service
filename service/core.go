@@ -11,11 +11,11 @@ const (
 	SCOPE_USER_PROTOTYPE_MANAGEMENT = "user.prototype.management"
 )
 
-func New(cfg *config.Config) *gin.Engine {
+func New(cfg config.ConfigInterFace) *gin.Engine {
 	// TODO scope register to scopes-service
 
 	engine := gin.Default()
-	engine.SetTrustedProxies([]string{cfg.Env.TrustProxy})
+	engine.SetTrustedProxies([]string{cfg.GetTrustProxy()})
 
 	// base features
 	features.LoadCommon(engine, cfg)

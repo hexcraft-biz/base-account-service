@@ -15,9 +15,9 @@ type Users struct {
 	*controller.Prototype
 }
 
-func NewUsers(cfg *config.Config) *Users {
+func NewUsers(cfg config.ConfigInterFace) *Users {
 	return &Users{
-		Prototype: controller.New("users", cfg.DB),
+		Prototype: controller.New("users", cfg.GetDB()),
 	}
 }
 
