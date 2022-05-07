@@ -7,8 +7,8 @@ import (
 )
 
 const (
-	SCOPE_USER_PROTOTYPE_SELF       = "user.prototype.self"
-	SCOPE_USER_PROTOTYPE_MANAGEMENT = "user.prototype.management"
+	SCOPE_USER_PROTOTYPE_SELF = "user.prototype.self"
+	SCOPE_USER_PROTOTYPE      = "user.prototype"
 )
 
 func New(cfg config.ConfigInterFace) *gin.Engine {
@@ -20,7 +20,7 @@ func New(cfg config.ConfigInterFace) *gin.Engine {
 	// base features
 	features.LoadCommon(engine, cfg)
 	// auth
-	features.LoadAuth(engine, cfg, SCOPE_USER_PROTOTYPE_MANAGEMENT)
+	features.LoadAuth(engine, cfg, SCOPE_USER_PROTOTYPE)
 	// users
 	features.LoadUsers(engine, cfg, SCOPE_USER_PROTOTYPE_SELF)
 
