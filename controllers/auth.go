@@ -241,6 +241,7 @@ func (ctrl *Auth) SignUp() gin.HandlerFunc {
 type resetPwdConfirmParams struct {
 	Email         string `json:"email" binding:"required,email,min=1,max=128"`
 	VerifyPageUrl string `json:"verify_page_url" binding:"required,url"`
+	// TODO: verify_page_url or verifyPageURL?
 }
 
 type resetPwdConfirmResp struct {
@@ -249,9 +250,15 @@ type resetPwdConfirmResp struct {
 
 func (ctrl *Auth) ResetPwdConfirm() gin.HandlerFunc {
 	return func(c *gin.Context) {
+		var (
+			params resetPwdConfirmParams
+			uri    *url.URL
+		)
 
-		var params resetPwdConfirmParams
 		if err := c.ShouldBindJSON(&params); err != nil {
+			c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"message": err.Error()})
+			return
+		} else if uri, err = url.ParseRequestURI(params.VerifyPageUrl); err != nil {
 			c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"message": err.Error()})
 			return
 		}
@@ -282,6 +289,9 @@ func (ctrl *Auth) ResetPwdConfirm() gin.HandlerFunc {
 			c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
 			return
 		}
+		vals := uri.Query()
+		vals.Add("token", tokenString)
+		realVerifyPageURI := uri.Scheme + "://" + uri.Host + uri.Path + "?" + vals.Encode()
 
 		email := misc.NewEmail(
 			ctrl.Config.GetSMTPHost(),
@@ -291,7 +301,7 @@ func (ctrl *Auth) ResetPwdConfirm() gin.HandlerFunc {
 		)
 		to := []string{params.Email}
 		subject := "Reset Password Email Confirmation"
-		body := `<html><body>This is email confirmation, please follow this <a href="` + params.VerifyPageUrl + tokenString + `">link</a> to complete reset password flow.</body></html>`
+		body := `<html><body>This is email confirmation, please follow this <a href="` + realVerifyPageURI + `">link</a> to complete reset password flow.</body></html>`
 		email.SendHTML(to, subject, body)
 
 		c.JSON(http.StatusAccepted, gin.H{"message": http.StatusText(http.StatusAccepted)})
