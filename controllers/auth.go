@@ -12,6 +12,7 @@ import (
 	"github.com/hexcraft-biz/base-account-service/models"
 	"github.com/hexcraft-biz/controller"
 	"golang.org/x/crypto/bcrypt"
+	"net/url"
 )
 
 const (
@@ -87,6 +88,7 @@ func (ctrl *Auth) Login() gin.HandlerFunc {
 type signUpEmailConfirmParams struct {
 	Email         string `json:"email" binding:"required,email,min=1,max=128"`
 	VerifyPageUrl string `json:"verify_page_url" binding:"required,url"`
+	// TODO: verify_page_url or verifyPageURL?
 }
 
 type signUpEmailConfirmResp struct {
@@ -95,9 +97,14 @@ type signUpEmailConfirmResp struct {
 
 func (ctrl *Auth) SignUpEmailConfirm() gin.HandlerFunc {
 	return func(c *gin.Context) {
-
-		var params signUpEmailConfirmParams
+		var (
+			params signUpEmailConfirmParams
+			uri    *url.URL
+		)
 		if err := c.ShouldBindJSON(&params); err != nil {
+			c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"message": err.Error()})
+			return
+		} else if uri, err = url.ParseRequestURI(params.VerifyPageUrl); err != nil {
 			c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"message": err.Error()})
 			return
 		}
@@ -128,6 +135,9 @@ func (ctrl *Auth) SignUpEmailConfirm() gin.HandlerFunc {
 			c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
 			return
 		}
+		vals := uri.Query()
+		vals.Add("token", tokenString)
+		realVerifyPageURI := uri.Scheme + "://" + uri.Host + uri.Path + "?" + vals.Encode()
 
 		email := misc.NewEmail(
 			ctrl.Config.GetSMTPHost(),
@@ -137,7 +147,7 @@ func (ctrl *Auth) SignUpEmailConfirm() gin.HandlerFunc {
 		)
 		to := []string{params.Email}
 		subject := "Signup Email Confirmation"
-		body := `<html><body>This is email confirmation, please follow this <a href="` + params.VerifyPageUrl + tokenString + `">link</a> to complete sign up flow.</body></html>`
+		body := `<html><body>This is email confirmation, please follow this <a href="` + realVerifyPageURI + `">link</a> to complete sign up flow.</body></html>`
 		email.SendHTML(to, subject, body)
 
 		c.JSON(http.StatusAccepted, gin.H{"message": http.StatusText(http.StatusAccepted)})
