@@ -40,16 +40,16 @@ func LoadAuth(e *gin.Engine, cfg config.ConfigInterFace, scopeName string) {
 	)
 
 	authV1.POST(
-		"/resetpassword/confirmation",
+		"/forgetpassword/confirmation",
 		middlewares.OAuth2ClientCredentials(cfg),
 		middlewares.ScopeVerify(cfg, scopeName),
-		c.ResetPwdConfirm(),
+		c.ForgetPwdConfirm(),
 	)
 	authV1.GET(
-		"/resetpassword/tokeninfo",
+		"/forgetpassword/tokeninfo",
 		middlewares.OAuth2ClientCredentials(cfg),
 		middlewares.ScopeVerify(cfg, scopeName),
-		c.ResetPwdTokenVerify(),
+		c.ForgetPwdTokenVerify(),
 	)
 	authV1.PUT(
 		"/password",

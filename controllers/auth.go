@@ -4,6 +4,8 @@ import (
 	"net/http"
 	"time"
 
+	"net/url"
+
 	"github.com/gin-gonic/gin"
 	"github.com/go-sql-driver/mysql"
 	"github.com/golang-jwt/jwt"
@@ -12,14 +14,13 @@ import (
 	"github.com/hexcraft-biz/base-account-service/models"
 	"github.com/hexcraft-biz/controller"
 	"golang.org/x/crypto/bcrypt"
-	"net/url"
 )
 
 const (
 	USER_STATUS_ENABLED            = "enabled"
 	EMAIL_CONFIRMATION_EXPIRE_MINS = 10
 	JWT_TYPE_SIGN_UP               = "signup"
-	JWT_TYPE_RESET_PWD             = "resetpwd"
+	JWT_TYPE_FORGET_PWD            = "forgetpwd"
 )
 
 type Auth struct {
@@ -236,22 +237,22 @@ func (ctrl *Auth) SignUp() gin.HandlerFunc {
 }
 
 //================================================================
-// ResetPassword
+// ForgetPassword
 //================================================================
-type resetPwdConfirmParams struct {
+type forgetPwdConfirmParams struct {
 	Email         string `json:"email" binding:"required,email,min=1,max=128"`
 	VerifyPageUrl string `json:"verify_page_url" binding:"required,url"`
 	// TODO: verify_page_url or verifyPageURL?
 }
 
-type resetPwdConfirmResp struct {
+type forgetPwdConfirmResp struct {
 	Token string `json:"token"`
 }
 
-func (ctrl *Auth) ResetPwdConfirm() gin.HandlerFunc {
+func (ctrl *Auth) ForgetPwdConfirm() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var (
-			params resetPwdConfirmParams
+			params forgetPwdConfirmParams
 			uri    *url.URL
 		)
 
@@ -283,7 +284,7 @@ func (ctrl *Auth) ResetPwdConfirm() gin.HandlerFunc {
 				IssuedAt:  issuedAt,
 			},
 			Email: params.Email,
-			Type:  JWT_TYPE_RESET_PWD,
+			Type:  JWT_TYPE_FORGET_PWD,
 		})
 		if err != nil {
 			c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
@@ -300,8 +301,8 @@ func (ctrl *Auth) ResetPwdConfirm() gin.HandlerFunc {
 			ctrl.Config.GetSMTPPassword(),
 		)
 		to := []string{params.Email}
-		subject := "Reset Password Email Confirmation"
-		body := `<html><body>This is email confirmation, please follow this <a href="` + realVerifyPageURI + `">link</a> to complete reset password flow.</body></html>`
+		subject := "Forget Password Email Confirmation"
+		body := `<html><body>This is email confirmation, please follow this <a href="` + realVerifyPageURI + `">link</a> to complete forget password flow.</body></html>`
 		email.SendHTML(to, subject, body)
 
 		c.JSON(http.StatusAccepted, gin.H{"message": http.StatusText(http.StatusAccepted)})
@@ -309,18 +310,18 @@ func (ctrl *Auth) ResetPwdConfirm() gin.HandlerFunc {
 	}
 }
 
-type resetPwdTokenVerifyParams struct {
+type forgetPwdTokenVerifyParams struct {
 	Token string `form:"token" binding:"required"`
 }
 
-type resetPwdTokenVerifyResp struct {
+type forgetPwdTokenVerifyResp struct {
 	Email string `json:"email"`
 }
 
-func (ctrl *Auth) ResetPwdTokenVerify() gin.HandlerFunc {
+func (ctrl *Auth) ForgetPwdTokenVerify() gin.HandlerFunc {
 	return func(c *gin.Context) {
 
-		var params resetPwdTokenVerifyParams
+		var params forgetPwdTokenVerifyParams
 		if err := c.ShouldBindQuery(&params); err != nil {
 			c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"message": err.Error()})
 			return
@@ -334,19 +335,19 @@ func (ctrl *Auth) ResetPwdTokenVerify() gin.HandlerFunc {
 			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"message": http.StatusText(http.StatusUnauthorized)})
 			return
 		}
-		if !token.Valid || claims.Type != JWT_TYPE_RESET_PWD {
+		if !token.Valid || claims.Type != JWT_TYPE_FORGET_PWD {
 			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"message": http.StatusText(http.StatusUnauthorized)})
 			return
 		}
 
-		c.JSON(http.StatusOK, resetPwdTokenVerifyResp{
+		c.JSON(http.StatusOK, forgetPwdTokenVerifyResp{
 			Email: claims.Email,
 		})
 		return
 	}
 }
 
-type resetPwdParams struct {
+type forgetPwdParams struct {
 	Token    string `json:"token" binding:"required"`
 	Password string `json:"password" binding:"required,min=5,max=128"`
 }
@@ -354,7 +355,7 @@ type resetPwdParams struct {
 func (ctrl *Auth) ChangePassword() gin.HandlerFunc {
 	return func(c *gin.Context) {
 
-		var params resetPwdParams
+		var params forgetPwdParams
 		if err := c.ShouldBindJSON(&params); err != nil {
 			c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"message": err.Error()})
 			return
@@ -368,7 +369,7 @@ func (ctrl *Auth) ChangePassword() gin.HandlerFunc {
 			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"message": http.StatusText(http.StatusUnauthorized)})
 			return
 		}
-		if !token.Valid || claims.Type != JWT_TYPE_RESET_PWD {
+		if !token.Valid || claims.Type != JWT_TYPE_FORGET_PWD {
 			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"message": http.StatusText(http.StatusUnauthorized)})
 			return
 		}
