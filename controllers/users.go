@@ -37,12 +37,17 @@ func (ctrl *Users) Get() gin.HandlerFunc {
 			c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
 			return
 		} else {
-			if absRes, absErr := entityRes.GetAbsUser(); absErr != nil {
-				c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"message": absErr.Error()})
+			if entityRes == nil {
+				c.AbortWithStatusJSON(http.StatusNotFound, gin.H{"message": http.StatusText(http.StatusNotFound)})
 				return
 			} else {
-				c.JSON(http.StatusOK, absRes)
-				return
+				if absRes, absErr := entityRes.GetAbsUser(); absErr != nil {
+					c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"message": absErr.Error()})
+					return
+				} else {
+					c.JSON(http.StatusOK, absRes)
+					return
+				}
 			}
 		}
 	}

@@ -88,8 +88,7 @@ func (ctrl *Auth) Login() gin.HandlerFunc {
 //================================================================
 type signUpEmailConfirmParams struct {
 	Email         string `json:"email" binding:"required,email,min=1,max=128"`
-	VerifyPageUrl string `json:"verify_page_url" binding:"required,url"`
-	// TODO: verify_page_url or verifyPageURL?
+	VerifyPageUrl string `json:"verifyPageURL" binding:"required,url"`
 }
 
 type signUpEmailConfirmResp struct {
@@ -241,8 +240,7 @@ func (ctrl *Auth) SignUp() gin.HandlerFunc {
 //================================================================
 type forgetPwdConfirmParams struct {
 	Email         string `json:"email" binding:"required,email,min=1,max=128"`
-	VerifyPageUrl string `json:"verify_page_url" binding:"required,url"`
-	// TODO: verify_page_url or verifyPageURL?
+	VerifyPageUrl string `json:"verifyPageURL" binding:"required,url"`
 }
 
 type forgetPwdConfirmResp struct {
