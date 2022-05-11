@@ -34,12 +34,4 @@ func LoadUsers(e *gin.Engine, cfg config.ConfigInterFace, scopeName string) {
 		middlewares.IsSelf(cfg),
 		c.UpdateStatus(),
 	)
-	usersV1.DELETE(
-		"/users/:id/prototype",
-		middlewares.OAuth2PKCE(cfg),
-		middlewares.ScopeVerify(cfg, scopeName),
-		middlewares.IsSelf(cfg),
-		c.Delete(),
-	)
-
 }

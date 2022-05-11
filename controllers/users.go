@@ -166,26 +166,3 @@ func (ctrl *Users) UpdateStatus() gin.HandlerFunc {
 		}
 	}
 }
-
-func (ctrl *Users) Delete() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		var targetUser TargetUser
-		if err := c.ShouldBindUri(&targetUser); err != nil {
-			c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"message": err.Error()})
-			return
-		}
-
-		if rowsAffected, err := models.NewUsersTableEngine(ctrl.DB).DeleteByID(targetUser.ID); err != nil {
-			c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
-			return
-		} else {
-			if rowsAffected == 0 {
-				c.AbortWithStatusJSON(http.StatusNotFound, gin.H{"message": http.StatusText(http.StatusNotFound)})
-				return
-			} else {
-				c.AbortWithStatusJSON(http.StatusNoContent, gin.H{"message": http.StatusText(http.StatusNoContent)})
-				return
-			}
-		}
-	}
-}
