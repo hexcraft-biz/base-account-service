@@ -52,7 +52,7 @@ func LoadAuth(e *gin.Engine, cfg config.ConfigInterFace, scopeName string) {
 		c.ResetPwdTokenVerify(),
 	)
 	authV1.PUT(
-		"/passoword",
+		"/password",
 		middlewares.OAuth2ClientCredentials(cfg),
 		middlewares.ScopeVerify(cfg, scopeName),
 		c.ChangePassword(),
