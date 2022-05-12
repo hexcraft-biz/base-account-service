@@ -12,6 +12,10 @@ import (
 	"github.com/hexcraft-biz/base-account-service/models"
 )
 
+const (
+	ScopeDelimiter = " "
+)
+
 func OAuth2PKCE(cfg config.ConfigInterFace) gin.HandlerFunc {
 	/*
 		X-{prefix}-Authenticated-User-Email
@@ -155,4 +159,30 @@ func ScopeVerify(cfg config.ConfigInterFace, scopeName string) gin.HandlerFunc {
 func contains(s []string, searchterm string) bool {
 	i := sort.SearchStrings(s, searchterm)
 	return i < len(s) && s[i] == searchterm
+}
+
+//================================================================
+//
+//================================================================
+func VerifyScope(cfg config.ConfigInterFace, allows []string) gin.HandlerFunc {
+	/*
+		X-{prefix}-Client-Scope
+	*/
+	return func(ctx *gin.Context) {
+		clientScopes := strings.Split(ctx.Request.Header.Get("X-"+cfg.GetOAuth2HeaderPrefix()+"-Client-Scope"), ScopeDelimiter)
+		if !inAllows(allows, clientScopes) {
+			ctx.AbortWithStatusJSON(http.StatusForbidden, gin.H{"message": http.StatusText(http.StatusForbidden)})
+		}
+	}
+}
+
+func inAllows(clientScopes, allows []string) bool {
+	sort.Strings(allows)
+	l := len(allows)
+	for i := range clientScopes {
+		if sort.SearchStrings(allows, clientScopes[i]) < l {
+			return true
+		}
+	}
+	return false
 }
