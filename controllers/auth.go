@@ -75,7 +75,7 @@ func (ctrl *Auth) Login() gin.HandlerFunc {
 					c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"message": absErr.Error()})
 					return
 				} else {
-					c.JSON(http.StatusOK, absRes)
+					c.AbortWithStatusJSON(http.StatusOK, absRes)
 					return
 				}
 			}
@@ -110,7 +110,7 @@ func (ctrl *Auth) SignUpEmailConfirm() gin.HandlerFunc {
 		}
 
 		if entityRes, err := models.NewUsersTableEngine(ctrl.DB).GetByIdentity(params.Email); err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"message": http.StatusText(http.StatusInternalServerError), "results": err.Error()})
+			c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"message": http.StatusText(http.StatusInternalServerError), "results": err.Error()})
 			return
 		} else if entityRes != nil {
 			c.AbortWithStatusJSON(http.StatusConflict, gin.H{"message": "This Email is already exist."})
@@ -150,7 +150,7 @@ func (ctrl *Auth) SignUpEmailConfirm() gin.HandlerFunc {
 		body := `<html><body>This is email confirmation, please follow this <a href="` + realVerifyPageURI + `">link</a> to complete sign up flow.</body></html>`
 		email.SendHTML(to, subject, body)
 
-		c.JSON(http.StatusAccepted, gin.H{"message": http.StatusText(http.StatusAccepted)})
+		c.AbortWithStatusJSON(http.StatusAccepted, gin.H{"message": http.StatusText(http.StatusAccepted)})
 		return
 	}
 }
@@ -185,7 +185,7 @@ func (ctrl *Auth) SignUpTokenVerify() gin.HandlerFunc {
 			return
 		}
 
-		c.JSON(http.StatusOK, signUpTokenVerifyResp{
+		c.AbortWithStatusJSON(http.StatusOK, signUpTokenVerifyResp{
 			Email: claims.Email,
 		})
 		return
@@ -221,15 +221,19 @@ func (ctrl *Auth) SignUp() gin.HandlerFunc {
 
 		if entityRes, err := models.NewUsersTableEngine(ctrl.DB).Insert(claims.Email, params.Password, USER_STATUS_ENABLED); err != nil {
 			if myErr, ok := err.(*mysql.MySQLError); ok && myErr.Number == 1062 {
-				c.JSON(http.StatusConflict, gin.H{"message": http.StatusText(http.StatusConflict)})
+				c.AbortWithStatusJSON(http.StatusConflict, gin.H{"message": http.StatusText(http.StatusConflict)})
+				return
 			} else {
-				c.JSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
+				c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
+				return
 			}
 		} else {
 			if absRes, absErr := entityRes.GetAbsUser(); absErr != nil {
-				c.JSON(http.StatusInternalServerError, gin.H{"message": absErr.Error()})
+				c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"message": absErr.Error()})
+				return
 			} else {
-				c.JSON(http.StatusOK, absRes)
+				c.AbortWithStatusJSON(http.StatusOK, absRes)
+				return
 			}
 		}
 	}
@@ -263,7 +267,7 @@ func (ctrl *Auth) ForgetPwdConfirm() gin.HandlerFunc {
 		}
 
 		if entityRes, err := models.NewUsersTableEngine(ctrl.DB).GetByIdentity(params.Email); err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"message": http.StatusText(http.StatusInternalServerError), "results": err.Error()})
+			c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"message": http.StatusText(http.StatusInternalServerError), "results": err.Error()})
 			return
 		} else if entityRes == nil {
 			c.AbortWithStatusJSON(http.StatusNotFound, gin.H{"message": "This Email is not already exist."})
@@ -303,7 +307,7 @@ func (ctrl *Auth) ForgetPwdConfirm() gin.HandlerFunc {
 		body := `<html><body>This is email confirmation, please follow this <a href="` + realVerifyPageURI + `">link</a> to complete forget password flow.</body></html>`
 		email.SendHTML(to, subject, body)
 
-		c.JSON(http.StatusAccepted, gin.H{"message": http.StatusText(http.StatusAccepted)})
+		c.AbortWithStatusJSON(http.StatusAccepted, gin.H{"message": http.StatusText(http.StatusAccepted)})
 		return
 	}
 }
@@ -338,7 +342,7 @@ func (ctrl *Auth) ForgetPwdTokenVerify() gin.HandlerFunc {
 			return
 		}
 
-		c.JSON(http.StatusOK, forgetPwdTokenVerifyResp{
+		c.AbortWithStatusJSON(http.StatusOK, forgetPwdTokenVerifyResp{
 			Email: claims.Email,
 		})
 		return
@@ -390,20 +394,12 @@ func (ctrl *Auth) ChangePassword() gin.HandlerFunc {
 					return
 				}
 
-				if rowsAffected, err := usersEngine.ResetPwd(entityRes.ID, params.Password, entityRes.Salt); err != nil {
-					if myErr, ok := err.(*mysql.MySQLError); ok && myErr.Number == 1062 {
-						c.JSON(http.StatusConflict, gin.H{"message": http.StatusText(http.StatusConflict)})
-					} else {
-						c.JSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
-					}
+				if _, err := usersEngine.ResetPwd(entityRes.ID, params.Password, entityRes.Salt); err != nil {
+					c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
+					return
 				} else {
-					if rowsAffected == 0 {
-						c.AbortWithStatusJSON(http.StatusNotFound, gin.H{"message": http.StatusText(http.StatusNotFound)})
-						return
-					} else {
-						c.AbortWithStatusJSON(http.StatusNoContent, gin.H{"message": http.StatusText(http.StatusNoContent)})
-						return
-					}
+					c.AbortWithStatusJSON(http.StatusNoContent, gin.H{"message": http.StatusText(http.StatusNoContent)})
+					return
 				}
 
 			}
