@@ -28,6 +28,7 @@ func OAuth2PKCE(cfg config.ConfigInterFace) gin.HandlerFunc {
 		clientScope := ctx.Request.Header.Get("X-" + prefix + "-Client-Scope")
 
 		if authUserEmail != "" {
+			// TODO: Might not need to validate this one.
 			if _, err := mail.ParseAddress(authUserEmail); err != nil {
 				ctx.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"message": http.StatusText(http.StatusUnauthorized)})
 				return
@@ -38,6 +39,7 @@ func OAuth2PKCE(cfg config.ConfigInterFace) gin.HandlerFunc {
 		}
 
 		if authUserId != "" {
+			// TODO: Might not need to validate this one.
 			if _, err := uuid.Parse(authUserId); err != nil {
 				ctx.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"message": http.StatusText(http.StatusUnauthorized)})
 				return
