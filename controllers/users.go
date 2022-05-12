@@ -4,7 +4,6 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"github.com/go-sql-driver/mysql"
 	"github.com/hexcraft-biz/base-account-service/config"
 	"github.com/hexcraft-biz/base-account-service/models"
 	"github.com/hexcraft-biz/controller"
@@ -45,7 +44,7 @@ func (ctrl *Users) Get() gin.HandlerFunc {
 					c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"message": absErr.Error()})
 					return
 				} else {
-					c.JSON(http.StatusOK, absRes)
+					c.AbortWithStatusJSON(http.StatusOK, absRes)
 					return
 				}
 			}
@@ -89,20 +88,12 @@ func (ctrl *Users) UpdatePwd() gin.HandlerFunc {
 					return
 				}
 
-				if rowsAffected, err := usersEngine.ResetPwd(entityRes.ID, params.Password, entityRes.Salt); err != nil {
-					if myErr, ok := err.(*mysql.MySQLError); ok && myErr.Number == 1062 {
-						c.JSON(http.StatusConflict, gin.H{"message": http.StatusText(http.StatusConflict)})
-					} else {
-						c.JSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
-					}
+				if _, err := usersEngine.ResetPwd(entityRes.ID, params.Password, entityRes.Salt); err != nil {
+					c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
+					return
 				} else {
-					if rowsAffected == 0 {
-						c.AbortWithStatusJSON(http.StatusNotFound, gin.H{"message": http.StatusText(http.StatusNotFound)})
-						return
-					} else {
-						c.AbortWithStatusJSON(http.StatusNoContent, gin.H{"message": http.StatusText(http.StatusNoContent)})
-						return
-					}
+					c.AbortWithStatusJSON(http.StatusNoContent, gin.H{"message": http.StatusText(http.StatusNoContent)})
+					return
 				}
 			}
 		}
@@ -137,32 +128,24 @@ func (ctrl *Users) UpdateStatus() gin.HandlerFunc {
 				c.AbortWithStatusJSON(http.StatusNotFound, gin.H{"message": http.StatusText(http.StatusNotFound)})
 				return
 			} else {
-				if rowsAffected, err := usersEngine.UpdateStatus(entityRes.ID, params.Status); err != nil {
-					if myErr, ok := err.(*mysql.MySQLError); ok && myErr.Number == 1062 {
-						c.JSON(http.StatusConflict, gin.H{"message": http.StatusText(http.StatusConflict)})
-					} else {
-						c.JSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
-					}
+				if _, err := usersEngine.UpdateStatus(entityRes.ID, params.Status); err != nil {
+					c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
+					return
 				} else {
-					if rowsAffected == 0 {
-						c.AbortWithStatusJSON(http.StatusNotFound, gin.H{"message": http.StatusText(http.StatusNotFound)})
+					if entityRes, err := usersEngine.GetByID(targetUser.ID); err != nil {
+						c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
 						return
 					} else {
-						if entityRes, err := usersEngine.GetByID(targetUser.ID); err != nil {
-							c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
+						if entityRes == nil {
+							c.AbortWithStatusJSON(http.StatusNotFound, gin.H{"message": http.StatusText(http.StatusNotFound)})
 							return
 						} else {
-							if entityRes == nil {
-								c.AbortWithStatusJSON(http.StatusNotFound, gin.H{"message": http.StatusText(http.StatusNotFound)})
+							if absRes, absErr := entityRes.GetAbsUser(); absErr != nil {
+								c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"message": absErr.Error()})
 								return
 							} else {
-								if absRes, absErr := entityRes.GetAbsUser(); absErr != nil {
-									c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"message": absErr.Error()})
-									return
-								} else {
-									c.JSON(http.StatusOK, absRes)
-									return
-								}
+								c.AbortWithStatusJSON(http.StatusOK, absRes)
+								return
 							}
 						}
 					}
