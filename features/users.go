@@ -16,21 +16,21 @@ func LoadUsers(e *gin.Engine, cfg config.ConfigInterFace, scopeName string) {
 	usersV1.GET(
 		"/users/:id/prototype",
 		middlewares.OAuth2PKCE(cfg),
-		middlewares.ScopeVerify(cfg, scopeName),
+		middlewares.ScopeVerify(cfg, []string{scopeName}, true),
 		middlewares.IsSelf(cfg),
 		c.Get(),
 	)
 	usersV1.PUT(
 		"/users/:id/prototype/password",
 		middlewares.OAuth2PKCE(cfg),
-		middlewares.ScopeVerify(cfg, scopeName),
+		middlewares.ScopeVerify(cfg, []string{scopeName}, true),
 		middlewares.IsSelf(cfg),
 		c.UpdatePwd(),
 	)
 	usersV1.PUT(
 		"/users/:id/prototype/status",
 		middlewares.OAuth2PKCE(cfg),
-		middlewares.ScopeVerify(cfg, scopeName),
+		middlewares.ScopeVerify(cfg, []string{scopeName}, true),
 		middlewares.IsSelf(cfg),
 		c.UpdateStatus(),
 	)

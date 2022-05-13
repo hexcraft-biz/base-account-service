@@ -2,12 +2,10 @@ package middlewares
 
 import (
 	"net/http"
-	"net/mail"
 	"sort"
 	"strings"
 
 	"github.com/gin-gonic/gin"
-	"github.com/google/uuid"
 	"github.com/hexcraft-biz/base-account-service/config"
 	"github.com/hexcraft-biz/base-account-service/models"
 )
@@ -31,24 +29,12 @@ func OAuth2PKCE(cfg config.ConfigInterFace) gin.HandlerFunc {
 		clientId := ctx.Request.Header.Get("X-" + prefix + "-Client-Id")
 		clientScope := ctx.Request.Header.Get("X-" + prefix + "-Client-Scope")
 
-		if authUserEmail != "" {
-			// TODO: Might not need to validate this one.
-			if _, err := mail.ParseAddress(authUserEmail); err != nil {
-				ctx.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"message": http.StatusText(http.StatusUnauthorized)})
-				return
-			}
-		} else {
+		if authUserEmail == "" {
 			ctx.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"message": http.StatusText(http.StatusUnauthorized)})
 			return
 		}
 
-		if authUserId != "" {
-			// TODO: Might not need to validate this one.
-			if _, err := uuid.Parse(authUserId); err != nil {
-				ctx.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"message": http.StatusText(http.StatusUnauthorized)})
-				return
-			}
-		} else {
+		if authUserId == "" {
 			ctx.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"message": http.StatusText(http.StatusUnauthorized)})
 			return
 		}
@@ -98,16 +84,6 @@ func IsSelf(cfg config.ConfigInterFace) gin.HandlerFunc {
 		authUserId := ctx.Request.Header.Get("X-" + prefix + "-Authenticated-User-Id")
 		authUserEmail := ctx.Request.Header.Get("X-" + prefix + "-Authenticated-User-Email")
 
-		if authUserId != "" {
-			if _, err := uuid.Parse(authUserId); err != nil {
-				ctx.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"message": http.StatusText(http.StatusUnauthorized)})
-				return
-			}
-		} else {
-			ctx.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"message": http.StatusText(http.StatusUnauthorized)})
-			return
-		}
-
 		// ID
 		userId := ctx.Param("id")
 		if authUserId != userId {
@@ -120,20 +96,15 @@ func IsSelf(cfg config.ConfigInterFace) gin.HandlerFunc {
 			ctx.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
 			return
 		} else {
-			if entityRes == nil {
-				ctx.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"message": http.StatusText(http.StatusUnauthorized)})
+			if entityRes == nil || authUserEmail != entityRes.Identity {
+				ctx.AbortWithStatusJSON(http.StatusForbidden, gin.H{"message": http.StatusText(http.StatusForbidden)})
 				return
-			} else {
-				if authUserEmail != entityRes.Identity {
-					ctx.AbortWithStatusJSON(http.StatusForbidden, gin.H{"message": http.StatusText(http.StatusForbidden)})
-					return
-				}
 			}
 		}
 	}
 }
 
-func ScopeVerify(cfg config.ConfigInterFace, scopeName string) gin.HandlerFunc {
+func ScopeVerify(cfg config.ConfigInterFace, resourceScopes []string, isExact bool) gin.HandlerFunc {
 	/*
 		X-{prefix}-Client-Scope
 	*/
@@ -147,8 +118,8 @@ func ScopeVerify(cfg config.ConfigInterFace, scopeName string) gin.HandlerFunc {
 			return
 		} else {
 			clientScopes := strings.Split(clientScope, " ")
-			sort.Strings(clientScopes)
-			if contains(clientScopes, scopeName) == false {
+
+			if scopeIntersect(clientScopes, resourceScopes, isExact) == false {
 				ctx.AbortWithStatusJSON(http.StatusForbidden, gin.H{"message": http.StatusText(http.StatusForbidden)})
 				return
 			}
@@ -156,9 +127,45 @@ func ScopeVerify(cfg config.ConfigInterFace, scopeName string) gin.HandlerFunc {
 	}
 }
 
-func contains(s []string, searchterm string) bool {
-	i := sort.SearchStrings(s, searchterm)
-	return i < len(s) && s[i] == searchterm
+func scopeIntersect(clientScopes, resourceScopes []string, isExact bool) bool {
+	hashTable := make(map[string]int)
+
+	newClientScopes := removeDuplicateStr(clientScopes)
+	newResourceScopes := removeDuplicateStr(resourceScopes)
+
+	for i := range newClientScopes {
+		hashTable[newClientScopes[i]]++
+	}
+
+	for i := range newResourceScopes {
+		hashTable[newResourceScopes[i]]++
+	}
+
+	matchCount := 0
+	for _, s := range newResourceScopes {
+		if hashTable[s] >= 2 {
+			matchCount++
+		}
+	}
+
+	if isExact == true {
+		return matchCount == len(resourceScopes)
+	} else {
+		return matchCount >= 1
+	}
+}
+
+func removeDuplicateStr(strSlice []string) []string {
+	keys := make(map[string]bool)
+	list := []string{}
+
+	for _, entry := range strSlice {
+		if _, value := keys[entry]; !value {
+			keys[entry] = true
+			list = append(list, entry)
+		}
+	}
+	return list
 }
 
 //================================================================
