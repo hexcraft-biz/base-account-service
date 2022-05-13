@@ -180,7 +180,8 @@ func inAllows(allows, clientScopes []string) bool {
 	sort.Strings(allows)
 	l := len(allows)
 	for i := range clientScopes {
-		if sort.SearchStrings(allows, clientScopes[i]) < l {
+		x := sort.SearchStrings(allows, clientScopes[i])
+		if (x < l) && (allows[x] == clientScopes[i]) {
 			return true
 		}
 	}
