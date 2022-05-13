@@ -168,15 +168,15 @@ func VerifyScope(cfg config.ConfigInterFace, allows []string) gin.HandlerFunc {
 	/*
 		X-{prefix}-Client-Scope
 	*/
-	return func(ctx *gin.Context) {
-		clientScopes := strings.Split(ctx.Request.Header.Get("X-"+cfg.GetOAuth2HeaderPrefix()+"-Client-Scope"), ScopeDelimiter)
+	return func(c *gin.Context) {
+		clientScopes := strings.Split(c.Request.Header.Get("X-"+cfg.GetOAuth2HeaderPrefix()+"-Client-Scope"), ScopeDelimiter)
 		if !inAllows(allows, clientScopes) {
-			ctx.AbortWithStatusJSON(http.StatusForbidden, gin.H{"message": http.StatusText(http.StatusForbidden)})
+			c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"message": http.StatusText(http.StatusForbidden)})
 		}
 	}
 }
 
-func inAllows(clientScopes, allows []string) bool {
+func inAllows(allows, clientScopes []string) bool {
 	sort.Strings(allows)
 	l := len(allows)
 	for i := range clientScopes {
