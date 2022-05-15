@@ -179,7 +179,7 @@ type UserAccounts interface {
 	GetByID(userID string) (Account, error)
 }
 
-func IsSelfRequest(cfg config.ConfigInterFace, mei UserAccounts, selfScope string) gin.HandlerFunc {
+func IsSelfRequest(cfg config.ConfigInterFace, mei UserAccounts, selfScope string, allowScopes []string) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		prefix := cfg.GetOAuth2HeaderPrefix()
 		authUserID := c.Request.Header.Get("X-" + prefix + "-Authenticated-User-Id")
@@ -197,7 +197,7 @@ func IsSelfRequest(cfg config.ConfigInterFace, mei UserAccounts, selfScope strin
 			} else {
 				c.Set("user", row)
 			}
-		} else {
+		} else if InAllows(allowScopes, clientScope) {
 			if row, err := mei.GetByID(authUserID); err != nil {
 				c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
 			} else {
@@ -207,9 +207,9 @@ func IsSelfRequest(cfg config.ConfigInterFace, mei UserAccounts, selfScope strin
 	}
 }
 
-func HasScope(scope string, clientScope []string) bool {
-	for i := range clientScope {
-		if scope == clientScope[i] {
+func HasScope(s string, scopes []string) bool {
+	for i := range scopes {
+		if s == scopes[i] {
 			return true
 		}
 	}
@@ -220,23 +220,20 @@ func HasScope(scope string, clientScope []string) bool {
 //
 //================================================================
 func VerifyScope(cfg config.ConfigInterFace, allows []string) gin.HandlerFunc {
-	/*
-		X-{prefix}-Client-Scope
-	*/
 	return func(c *gin.Context) {
 		clientScopes := strings.Split(c.Request.Header.Get("X-"+cfg.GetOAuth2HeaderPrefix()+"-Client-Scope"), ScopeDelimiter)
-		if !inAllows(allows, clientScopes) {
+		if !InAllows(allows, clientScopes) {
 			c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"message": http.StatusText(http.StatusForbidden)})
 		}
 	}
 }
 
-func inAllows(allows, clientScopes []string) bool {
+func InAllows(allows, scopes []string) bool {
 	sort.Strings(allows)
 	l := len(allows)
-	for i := range clientScopes {
-		x := sort.SearchStrings(allows, clientScopes[i])
-		if (x < l) && (allows[x] == clientScopes[i]) {
+	for i := range scopes {
+		x := sort.SearchStrings(allows, scopes[i])
+		if (x < l) && (allows[x] == scopes[i]) {
 			return true
 		}
 	}
