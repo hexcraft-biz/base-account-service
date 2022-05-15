@@ -168,7 +168,7 @@ type UserAccounts interface {
 	GetMwInterfaceByID(userID string) (Account, error)
 }
 
-func IsSelfAccount(cfg config.ConfigInterFace, mei UserAccounts, selfScope string, allowScopes []string) gin.HandlerFunc {
+func IsSelfRequest(cfg config.ConfigInterFace, mei UserAccounts, selfScope string, allowScopes []string) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		prefix := cfg.GetOAuth2HeaderPrefix()
 		authUserID := c.Request.Header.Get("X-" + prefix + "-Authenticated-User-Id")
