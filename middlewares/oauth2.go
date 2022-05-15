@@ -171,6 +171,54 @@ func removeDuplicateStr(strSlice []string) []string {
 //================================================================
 //
 //================================================================
+type Account interface {
+	GetIdentity() string
+}
+
+type UserAccounts interface {
+	GetByID(userID string) (Account, error)
+}
+
+func IsSelfRequest(cfg config.ConfigInterFace, mei UserAccounts, selfScope string) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		prefix := cfg.GetOAuth2HeaderPrefix()
+		authUserID := c.Request.Header.Get("X-" + prefix + "-Authenticated-User-Id")
+		authUserEmail := c.Request.Header.Get("X-" + prefix + "-Authenticated-User-Email")
+		clientScope := strings.Split(c.Request.Header.Get("X-"+prefix+"-Client-Scope"), ScopeDelimiter)
+		userID := c.Param("id")
+
+		if HasScope(selfScope, clientScope) {
+			if authUserID != userID {
+				c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"message": http.StatusText(http.StatusForbidden)})
+			} else if row, err := mei.GetByID(userID); err != nil {
+				c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
+			} else if row == nil || authUserEmail != row.GetIdentity() {
+				c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"message": http.StatusText(http.StatusForbidden)})
+			} else {
+				c.Set("user", row)
+			}
+		} else {
+			if row, err := mei.GetByID(authUserID); err != nil {
+				c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
+			} else {
+				c.Set("user", row)
+			}
+		}
+	}
+}
+
+func HasScope(scope string, clientScope []string) bool {
+	for i := range clientScope {
+		if scope == clientScope[i] {
+			return true
+		}
+	}
+	return false
+}
+
+//================================================================
+//
+//================================================================
 func VerifyScope(cfg config.ConfigInterFace, allows []string) gin.HandlerFunc {
 	/*
 		X-{prefix}-Client-Scope
