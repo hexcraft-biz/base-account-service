@@ -12,7 +12,7 @@ type Common struct {
 	*controller.Prototype
 }
 
-func NewCommon(cfg config.ConfigInterFace) *Common {
+func NewCommon(cfg config.ConfigInterface) *Common {
 	return &Common{
 		Prototype: controller.New("common", cfg.GetDB()),
 	}

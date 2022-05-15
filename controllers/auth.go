@@ -25,10 +25,10 @@ const (
 
 type Auth struct {
 	*controller.Prototype
-	Config config.ConfigInterFace
+	Config config.ConfigInterface
 }
 
-func NewAuth(cfg config.ConfigInterFace) *Auth {
+func NewAuth(cfg config.ConfigInterface) *Auth {
 	return &Auth{
 		Prototype: controller.New("auth", cfg.GetDB()),
 		Config:    cfg,

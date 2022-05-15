@@ -29,7 +29,7 @@ func main() {
 }
 
 //================================================================
-// AppConfig implement ConfigInterFace
+// AppConfig implement ConfigInterface
 //================================================================
 type AppConfig struct {
 	DB *sqlx.DB

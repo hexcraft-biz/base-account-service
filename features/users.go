@@ -8,7 +8,7 @@ import (
 	"github.com/hexcraft-biz/feature"
 )
 
-func LoadUsers(e *gin.Engine, cfg config.ConfigInterFace, scopeName string) {
+func LoadUsers(e *gin.Engine, cfg config.ConfigInterface, scopeName string) {
 	c := controllers.NewUsers(cfg)
 
 	usersV1 := feature.New(e, "/users/v1")

@@ -2,7 +2,7 @@ package config
 
 import "github.com/jmoiron/sqlx"
 
-type ConfigInterFace interface {
+type ConfigInterface interface {
 	GetDB() *sqlx.DB
 	GetJWTSecret() []byte
 	GetTrustProxy() string

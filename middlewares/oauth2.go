@@ -14,7 +14,7 @@ const (
 	ScopeDelimiter = " "
 )
 
-func OAuth2PKCE(cfg config.ConfigInterFace) gin.HandlerFunc {
+func OAuth2PKCE(cfg config.ConfigInterface) gin.HandlerFunc {
 	/*
 		X-{prefix}-Authenticated-User-Email
 		X-{prefix}-Authenticated-User-Id
@@ -51,7 +51,7 @@ func OAuth2PKCE(cfg config.ConfigInterFace) gin.HandlerFunc {
 	}
 }
 
-func OAuth2ClientCredentials(cfg config.ConfigInterFace) gin.HandlerFunc {
+func OAuth2ClientCredentials(cfg config.ConfigInterface) gin.HandlerFunc {
 	/*
 		X-{prefix}-Client-Id
 		X-{prefix}-Client-Scope
@@ -74,7 +74,7 @@ func OAuth2ClientCredentials(cfg config.ConfigInterFace) gin.HandlerFunc {
 	}
 }
 
-func IsSelf(cfg config.ConfigInterFace) gin.HandlerFunc {
+func IsSelf(cfg config.ConfigInterface) gin.HandlerFunc {
 	/*
 		X-{prefix}-Authenticated-User-Id
 	*/
@@ -93,7 +93,7 @@ func IsSelf(cfg config.ConfigInterFace) gin.HandlerFunc {
 	}
 }
 
-func ScopeVerify(cfg config.ConfigInterFace, resourceScopes []string, isExact bool) gin.HandlerFunc {
+func ScopeVerify(cfg config.ConfigInterface, resourceScopes []string, isExact bool) gin.HandlerFunc {
 	/*
 		X-{prefix}-Client-Scope
 	*/
@@ -168,7 +168,7 @@ type UserAccounts interface {
 	GetMwInterfaceByID(userID string) (Account, error)
 }
 
-func IsSelfRequest(cfg config.ConfigInterFace, mei UserAccounts, selfScope string, allowScopes []string) gin.HandlerFunc {
+func IsSelfRequest(cfg config.ConfigInterface, mei UserAccounts, selfScope string, allowScopes []string) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		prefix := cfg.GetOAuth2HeaderPrefix()
 		authUserID := c.Request.Header.Get("X-" + prefix + "-Authenticated-User-Id")
@@ -208,7 +208,7 @@ func HasScope(s string, scopes []string) bool {
 //================================================================
 //
 //================================================================
-func VerifyScope(cfg config.ConfigInterFace, allows []string) gin.HandlerFunc {
+func VerifyScope(cfg config.ConfigInterface, allows []string) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		clientScopes := strings.Split(c.Request.Header.Get("X-"+cfg.GetOAuth2HeaderPrefix()+"-Client-Scope"), ScopeDelimiter)
 		if !InAllows(allows, clientScopes) {

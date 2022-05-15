@@ -14,7 +14,7 @@ type Users struct {
 	*controller.Prototype
 }
 
-func NewUsers(cfg config.ConfigInterFace) *Users {
+func NewUsers(cfg config.ConfigInterface) *Users {
 	return &Users{
 		Prototype: controller.New("users", cfg.GetDB()),
 	}

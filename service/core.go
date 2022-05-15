@@ -11,7 +11,7 @@ const (
 	SCOPE_USER_PROTOTYPE      = "user.prototype"
 )
 
-func New(cfg config.ConfigInterFace) *gin.Engine {
+func New(cfg config.ConfigInterface) *gin.Engine {
 	// TODO scope register to scopes-service
 
 	engine := gin.Default()

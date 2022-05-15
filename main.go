@@ -27,7 +27,7 @@ func MustNot(err error) {
 }
 
 //================================================================
-// AppConfig implement ConfigInterFace
+// AppConfig implement ConfigInterface
 //================================================================
 type AppConfig struct {
 	DB *sqlx.DB
