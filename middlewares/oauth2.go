@@ -78,28 +78,17 @@ func IsSelf(cfg config.ConfigInterFace) gin.HandlerFunc {
 	/*
 		X-{prefix}-Authenticated-User-Id
 	*/
-	return func(ctx *gin.Context) {
+	return func(c *gin.Context) {
 		prefix := cfg.GetOAuth2HeaderPrefix()
-
-		authUserId := ctx.Request.Header.Get("X-" + prefix + "-Authenticated-User-Id")
-		authUserEmail := ctx.Request.Header.Get("X-" + prefix + "-Authenticated-User-Email")
-
-		// ID
-		userId := ctx.Param("id")
+		authUserId := c.Request.Header.Get("X-" + prefix + "-Authenticated-User-Id")
+		authUserEmail := c.Request.Header.Get("X-" + prefix + "-Authenticated-User-Email")
+		userId := c.Param("id")
 		if authUserId != userId {
-			ctx.AbortWithStatusJSON(http.StatusForbidden, gin.H{"message": http.StatusText(http.StatusForbidden)})
-			return
-		}
-
-		// Email
-		if entityRes, err := models.NewUsersTableEngine(cfg.GetDB()).GetByID(authUserId); err != nil {
-			ctx.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
-			return
-		} else {
-			if entityRes == nil || authUserEmail != entityRes.Identity {
-				ctx.AbortWithStatusJSON(http.StatusForbidden, gin.H{"message": http.StatusText(http.StatusForbidden)})
-				return
-			}
+			c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"message": http.StatusText(http.StatusForbidden)})
+		} else if entityRes, err := models.NewUsersTableEngine(cfg.GetDB()).GetByID(authUserId); err != nil {
+			c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
+		} else if entityRes == nil || authUserEmail != entityRes.Identity {
+			c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"message": http.StatusText(http.StatusForbidden)})
 		}
 	}
 }
@@ -179,7 +168,7 @@ type UserAccounts interface {
 	GetMwInterfaceByID(userID string) (Account, error)
 }
 
-func IsSelfRequest(cfg config.ConfigInterFace, mei UserAccounts, selfScope string, allowScopes []string) gin.HandlerFunc {
+func IsSelfAccount(cfg config.ConfigInterFace, mei UserAccounts, selfScope string, allowScopes []string) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		prefix := cfg.GetOAuth2HeaderPrefix()
 		authUserID := c.Request.Header.Get("X-" + prefix + "-Authenticated-User-Id")
