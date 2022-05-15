@@ -200,7 +200,7 @@ func IsSelfRequest(cfg config.ConfigInterFace, mei UserAccounts, selfScope strin
 		} else if InAllows(allowScopes, clientScope) {
 			if row, err := mei.GetByID(authUserID); err != nil {
 				c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
-			} else {
+			} else if row != nil {
 				c.Set("user", row)
 			}
 		}
