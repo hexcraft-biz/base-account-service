@@ -176,7 +176,7 @@ type Account interface {
 }
 
 type UserAccounts interface {
-	GetByID(userID string) (Account, error)
+	GetMwInterfaceByID(userID string) (Account, error)
 }
 
 func IsSelfRequest(cfg config.ConfigInterFace, mei UserAccounts, selfScope string, allowScopes []string) gin.HandlerFunc {
@@ -190,7 +190,7 @@ func IsSelfRequest(cfg config.ConfigInterFace, mei UserAccounts, selfScope strin
 		if HasScope(selfScope, clientScope) {
 			if authUserID != userID {
 				c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"message": http.StatusText(http.StatusForbidden)})
-			} else if row, err := mei.GetByID(userID); err != nil {
+			} else if row, err := mei.GetMwInterfaceByID(userID); err != nil {
 				c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
 			} else if row == nil || authUserEmail != row.GetIdentity() {
 				c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"message": http.StatusText(http.StatusForbidden)})
@@ -198,7 +198,7 @@ func IsSelfRequest(cfg config.ConfigInterFace, mei UserAccounts, selfScope strin
 				c.Set("user", row)
 			}
 		} else if InAllows(allowScopes, clientScope) {
-			if row, err := mei.GetByID(authUserID); err != nil {
+			if row, err := mei.GetMwInterfaceByID(userID); err != nil {
 				c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
 			} else if row != nil {
 				c.Set("user", row)
