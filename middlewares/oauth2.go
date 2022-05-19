@@ -181,7 +181,9 @@ func IsSelfRequest(cfg config.ConfigInterface, mei UserAccounts, selfScope strin
 				c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"message": http.StatusText(http.StatusForbidden)})
 			} else if row, err := mei.GetMwInterfaceByID(userID); err != nil {
 				c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
-			} else if row == nil || authUserEmail != row.GetIdentity() {
+			} else if row == nil {
+				c.AbortWithStatusJSON(http.StatusNotFound, gin.H{"message": http.StatusText(http.StatusNotFound)})
+			} else if authUserEmail != row.GetIdentity() {
 				c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"message": http.StatusText(http.StatusForbidden)})
 			} else {
 				c.Set("user", row)
