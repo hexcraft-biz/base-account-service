@@ -219,6 +219,15 @@ func VerifyScope(cfg config.ConfigInterface, allows []string) gin.HandlerFunc {
 	}
 }
 
+func VerifyScopeWithHeaderAffix(headerAffix string, allows []string) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		clientScopes := strings.Split(c.Request.Header.Get("X-"+headerAffix+"-Client-Scope"), ScopeDelimiter)
+		if !InAllows(allows, clientScopes) {
+			c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"message": http.StatusText(http.StatusForbidden)})
+		}
+	}
+}
+
 func InAllows(allows, scopes []string) bool {
 	sort.Strings(allows)
 	l := len(allows)
