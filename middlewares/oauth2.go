@@ -99,7 +99,7 @@ func IsSelf(cfg config.ConfigInterface, selfScope string, allowScopes []string) 
 	}
 }
 
-func ScopeVerify(cfg config.ConfigInterface, resourceScopes []string, isExact bool) gin.HandlerFunc {
+func VerifyScope(cfg config.ConfigInterface, resourceScopes []string, isExact bool) gin.HandlerFunc {
 	/*
 		X-{prefix}-Client-Scope
 	*/
@@ -218,15 +218,6 @@ func HasScope(s string, scopes []string) bool {
 //================================================================
 //
 //================================================================
-func VerifyScope(cfg config.ConfigInterface, allows []string) gin.HandlerFunc {
-	return func(c *gin.Context) {
-		clientScopes := strings.Split(c.Request.Header.Get("X-"+cfg.GetOAuth2HeaderPrefix()+"-Client-Scope"), ScopeDelimiter)
-		if !InAllows(allows, clientScopes) {
-			c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"message": http.StatusText(http.StatusForbidden)})
-		}
-	}
-}
-
 func VerifyScopeWithHeaderAffix(headerAffix string, allows []string) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		clientScopes := strings.Split(c.Request.Header.Get("X-"+headerAffix+"-Client-Scope"), ScopeDelimiter)

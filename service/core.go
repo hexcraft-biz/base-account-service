@@ -6,11 +6,6 @@ import (
 	"github.com/hexcraft-biz/base-account-service/features"
 )
 
-const (
-	SCOPE_USER_PROTOTYPE_SELF = "user.prototype.self"
-	SCOPE_USER_PROTOTYPE      = "user.prototype"
-)
-
 func New(cfg config.ConfigInterface) *gin.Engine {
 	// TODO scope register to scopes-service
 
@@ -20,9 +15,9 @@ func New(cfg config.ConfigInterface) *gin.Engine {
 	// base features
 	features.LoadCommon(engine, cfg)
 	// auth
-	features.LoadAuth(engine, cfg, SCOPE_USER_PROTOTYPE)
+	features.LoadAuth(engine, cfg)
 	// users
-	features.LoadUsers(engine, cfg, SCOPE_USER_PROTOTYPE_SELF)
+	features.LoadUsers(engine, cfg)
 
 	return engine
 }

@@ -8,7 +8,11 @@ import (
 	"github.com/hexcraft-biz/feature"
 )
 
-func LoadUsers(e *gin.Engine, cfg config.ConfigInterface, scopeName string) {
+const (
+	SCOPE_USER_PROTOTYPE_SELF = "user.prototype.self"
+)
+
+func LoadUsers(e *gin.Engine, cfg config.ConfigInterface) {
 	c := controllers.NewUsers(cfg)
 
 	usersV1 := feature.New(e, "/users/v1")
@@ -16,22 +20,22 @@ func LoadUsers(e *gin.Engine, cfg config.ConfigInterface, scopeName string) {
 	usersV1.GET(
 		"/users/:id/prototype",
 		middlewares.OAuth2PKCE(cfg),
-		middlewares.ScopeVerify(cfg, []string{scopeName}, true),
-		middlewares.IsSelf(cfg, scopeName, []string{}),
+		middlewares.VerifyScope(cfg, []string{SCOPE_USER_PROTOTYPE_SELF}, true),
+		middlewares.IsSelf(cfg, SCOPE_USER_PROTOTYPE_SELF, []string{}),
 		c.Get(),
 	)
 	usersV1.PUT(
 		"/users/:id/prototype/password",
 		middlewares.OAuth2PKCE(cfg),
-		middlewares.ScopeVerify(cfg, []string{scopeName}, true),
-		middlewares.IsSelf(cfg, scopeName, []string{}),
+		middlewares.VerifyScope(cfg, []string{SCOPE_USER_PROTOTYPE_SELF}, true),
+		middlewares.IsSelf(cfg, SCOPE_USER_PROTOTYPE_SELF, []string{}),
 		c.UpdatePwd(),
 	)
 	usersV1.PUT(
 		"/users/:id/prototype/status",
 		middlewares.OAuth2PKCE(cfg),
-		middlewares.ScopeVerify(cfg, []string{scopeName}, true),
-		middlewares.IsSelf(cfg, scopeName, []string{}),
+		middlewares.VerifyScope(cfg, []string{SCOPE_USER_PROTOTYPE_SELF}, true),
+		middlewares.IsSelf(cfg, SCOPE_USER_PROTOTYPE_SELF, []string{}),
 		c.UpdateStatus(),
 	)
 }
