@@ -1,7 +1,9 @@
 package controllers
 
 import (
+	"bytes"
 	"net/http"
+	"text/template"
 	"time"
 
 	"net/url"
@@ -146,8 +148,22 @@ func (ctrl *Auth) SignUpEmailConfirm() gin.HandlerFunc {
 			ctrl.Config.GetSMTPPassword(),
 		)
 		to := []string{params.Email}
-		subject := "Signup Email Confirmation"
-		body := `<html><body>This is email confirmation, please follow this <a href="` + realVerifyPageURI + `">link</a> to complete sign up flow.</body></html>`
+		subject := ctrl.Config.GetSignUpEmailSubject()
+
+		tmpl, _ := template.New("email").Parse(getEmailTplHTML())
+		var tpl bytes.Buffer
+
+		tmpl.Execute(&tpl, struct {
+			Content           string
+			RealVerifyPageURI string
+			LinkText          string
+		}{
+			ctrl.Config.GetSignUpEmailContent(),
+			realVerifyPageURI,
+			ctrl.Config.GetSignUpEmailLinkText(),
+		})
+
+		body := tpl.String()
 		email.SendHTML(to, subject, body)
 
 		c.AbortWithStatusJSON(http.StatusAccepted, gin.H{"message": http.StatusText(http.StatusAccepted)})
@@ -303,8 +319,22 @@ func (ctrl *Auth) ForgetPwdConfirm() gin.HandlerFunc {
 			ctrl.Config.GetSMTPPassword(),
 		)
 		to := []string{params.Email}
-		subject := "Forget Password Email Confirmation"
-		body := `<html><body>This is email confirmation, please follow this <a href="` + realVerifyPageURI + `">link</a> to complete forget password flow.</body></html>`
+		subject := ctrl.Config.GetForgetPwdEmailSubject()
+
+		tmpl, _ := template.New("email").Parse(getEmailTplHTML())
+		var tpl bytes.Buffer
+
+		tmpl.Execute(&tpl, struct {
+			Content           string
+			RealVerifyPageURI string
+			LinkText          string
+		}{
+			ctrl.Config.GetForgetPwdEmailContent(),
+			realVerifyPageURI,
+			ctrl.Config.GetSignUpEmailLinkText(),
+		})
+
+		body := tpl.String()
 		email.SendHTML(to, subject, body)
 
 		c.AbortWithStatusJSON(http.StatusAccepted, gin.H{"message": http.StatusText(http.StatusAccepted)})
@@ -405,4 +435,17 @@ func (ctrl *Auth) ChangePassword() gin.HandlerFunc {
 			}
 		}
 	}
+}
+
+func getEmailTplHTML() string {
+	return `
+	<!DOCTYPE html>
+		<html>
+			<body>
+				<div>
+					<p>{{ .Content }}</p>
+					<a href={{ .RealVerifyPageURI }}>{{ .LinkText }}</a>
+				</div>
+			</body>
+		</html>`
 }

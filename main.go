@@ -65,6 +65,30 @@ func (ac *AppConfig) GetOAuth2HeaderPrefix() string {
 	return os.Getenv("OAUTH2_HEADER_PREFIX")
 }
 
+func (ac *AppConfig) GetSignUpEmailSubject() string {
+	return os.Getenv("SIGNUP_EMAIL_SUBJECT")
+}
+
+func (ac *AppConfig) GetSignUpEmailContent() string {
+	return os.Getenv("SIGNUP_EMAIL_CONTENT")
+}
+
+func (ac *AppConfig) GetSignUpEmailLinkText() string {
+	return os.Getenv("SIGNUP_EMAIL_LINK_TEXT")
+}
+
+func (ac *AppConfig) GetForgetPwdEmailSubject() string {
+	return os.Getenv("FORGET_PWD_EMAIL_SUBJECT")
+}
+
+func (ac *AppConfig) GetForgetPwdEmailContent() string {
+	return os.Getenv("FORGET_PWD_EMAIL_CONTENT")
+}
+
+func (ac *AppConfig) GetForgetPwdEmailLinkText() string {
+	return os.Getenv("FORGET_PWD_LINK_TEXT")
+}
+
 //================================================================
 // Env
 //================================================================
