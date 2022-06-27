@@ -90,7 +90,9 @@ func IsSelf(cfg config.ConfigInterface, selfScope string, allowScopes []string) 
 				c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"message": http.StatusText(http.StatusForbidden)})
 			} else if entityRes, err := models.NewUsersTableEngine(cfg.GetDB()).GetByID(authUserId); err != nil {
 				c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
-			} else if entityRes == nil || authUserEmail != entityRes.Identity {
+			} else if entityRes == nil {
+				c.AbortWithStatusJSON(http.StatusNotFound, gin.H{"message": http.StatusText(http.StatusNotFound)})
+			} else if authUserEmail != entityRes.Identity {
 				c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"message": http.StatusText(http.StatusForbidden)})
 			}
 		} else if !InAllows(allowScopes, clientScope) {
@@ -188,7 +190,7 @@ func IsSelfRequest(cfg config.ConfigInterface, mei UserAccounts, selfScope strin
 			} else if row, err := mei.GetMwInterfaceByID(userID); err != nil {
 				c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
 			} else if row == nil {
-				c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"message": http.StatusText(http.StatusForbidden)})
+				c.AbortWithStatusJSON(http.StatusNotFound, gin.H{"message": http.StatusText(http.StatusNotFound)})
 			} else if authUserEmail != row.GetIdentity() {
 				c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"message": http.StatusText(http.StatusForbidden)})
 			} else {
