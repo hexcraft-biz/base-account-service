@@ -11,4 +11,10 @@ type ConfigInterface interface {
 	GetSMTPUsername() string
 	GetSMTPPassword() string
 	GetOAuth2HeaderPrefix() string
+	GetSignUpEmailSubject() string
+	GetSignUpEmailContent() string
+	GetSignUpEmailLinkText() string
+	GetForgetPwdEmailSubject() string
+	GetForgetPwdEmailContent() string
+	GetForgetPwdEmailLinkText() string
 }

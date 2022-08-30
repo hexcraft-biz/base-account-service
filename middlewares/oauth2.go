@@ -74,7 +74,7 @@ func OAuth2ClientCredentials(cfg config.ConfigInterface) gin.HandlerFunc {
 	}
 }
 
-func IsSelf(cfg config.ConfigInterface) gin.HandlerFunc {
+func IsSelf(cfg config.ConfigInterface, selfScope string, allowScopes []string) gin.HandlerFunc {
 	/*
 		X-{prefix}-Authenticated-User-Id
 	*/
@@ -82,18 +82,26 @@ func IsSelf(cfg config.ConfigInterface) gin.HandlerFunc {
 		prefix := cfg.GetOAuth2HeaderPrefix()
 		authUserId := c.Request.Header.Get("X-" + prefix + "-Authenticated-User-Id")
 		authUserEmail := c.Request.Header.Get("X-" + prefix + "-Authenticated-User-Email")
-		userId := c.Param("id")
-		if authUserId != userId {
-			c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"message": http.StatusText(http.StatusForbidden)})
-		} else if entityRes, err := models.NewUsersTableEngine(cfg.GetDB()).GetByID(authUserId); err != nil {
-			c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
-		} else if entityRes == nil || authUserEmail != entityRes.Identity {
+		clientScope := strings.Split(c.Request.Header.Get("X-"+prefix+"-Client-Scope"), ScopeDelimiter)
+		reqUserID := c.Param("id")
+
+		if HasScope(selfScope, clientScope) {
+			if authUserId != reqUserID {
+				c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"message": http.StatusText(http.StatusForbidden)})
+			} else if entityRes, err := models.NewUsersTableEngine(cfg.GetDB()).GetByID(authUserId); err != nil {
+				c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
+			} else if entityRes == nil {
+				c.AbortWithStatusJSON(http.StatusNotFound, gin.H{"message": http.StatusText(http.StatusNotFound)})
+			} else if authUserEmail != entityRes.Identity {
+				c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"message": http.StatusText(http.StatusForbidden)})
+			}
+		} else if !InAllows(allowScopes, clientScope) {
 			c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"message": http.StatusText(http.StatusForbidden)})
 		}
 	}
 }
 
-func ScopeVerify(cfg config.ConfigInterface, resourceScopes []string, isExact bool) gin.HandlerFunc {
+func VerifyScope(cfg config.ConfigInterface, resourceScopes []string, isExact bool) gin.HandlerFunc {
 	/*
 		X-{prefix}-Client-Scope
 	*/
@@ -106,7 +114,7 @@ func ScopeVerify(cfg config.ConfigInterface, resourceScopes []string, isExact bo
 			ctx.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"message": http.StatusText(http.StatusUnauthorized)})
 			return
 		} else {
-			clientScopes := strings.Split(clientScope, " ")
+			clientScopes := strings.Split(clientScope, ScopeDelimiter)
 
 			if scopeIntersect(clientScopes, resourceScopes, isExact) == false {
 				ctx.AbortWithStatusJSON(http.StatusForbidden, gin.H{"message": http.StatusText(http.StatusForbidden)})
@@ -181,7 +189,7 @@ func IsSelfRequest(cfg config.ConfigInterface, mei UserAccounts, userID, selfSco
 			} else if row, err := mei.GetMwInterfaceByID(userID); err != nil {
 				c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
 			} else if row == nil {
-				c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"message": http.StatusText(http.StatusForbidden)})
+				c.AbortWithStatusJSON(http.StatusNotFound, gin.H{"message": http.StatusText(http.StatusNotFound)})
 			} else if authUserEmail != row.GetIdentity() {
 				c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"message": http.StatusText(http.StatusForbidden)})
 			} else {
@@ -211,15 +219,6 @@ func HasScope(s string, scopes []string) bool {
 //================================================================
 //
 //================================================================
-func VerifyScope(cfg config.ConfigInterface, allows []string) gin.HandlerFunc {
-	return func(c *gin.Context) {
-		clientScopes := strings.Split(c.Request.Header.Get("X-"+cfg.GetOAuth2HeaderPrefix()+"-Client-Scope"), ScopeDelimiter)
-		if !InAllows(allows, clientScopes) {
-			c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"message": http.StatusText(http.StatusForbidden)})
-		}
-	}
-}
-
 func VerifyScopeWithHeaderAffix(headerAffix string, allows []string) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		clientScopes := strings.Split(c.Request.Header.Get("X-"+headerAffix+"-Client-Scope"), ScopeDelimiter)
