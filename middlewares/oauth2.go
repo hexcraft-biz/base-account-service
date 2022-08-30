@@ -176,12 +176,13 @@ type UserAccounts interface {
 	GetMwInterfaceByID(userID string) (Account, error)
 }
 
-func IsSelfRequest(cfg config.ConfigInterface, mei UserAccounts, userID, selfScope string, allowScopes []string) gin.HandlerFunc {
+func IsSelfRequest(cfg config.ConfigInterface, mei UserAccounts, selfScope string, allowScopes []string) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		prefix := cfg.GetOAuth2HeaderPrefix()
 		authUserID := c.Request.Header.Get("X-" + prefix + "-Authenticated-User-Id")
 		authUserEmail := c.Request.Header.Get("X-" + prefix + "-Authenticated-User-Email")
 		clientScope := strings.Split(c.Request.Header.Get("X-"+prefix+"-Client-Scope"), ScopeDelimiter)
+		userID := c.Param("id")
 
 		if HasScope(selfScope, clientScope) {
 			if authUserID != userID {
