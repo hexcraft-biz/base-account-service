@@ -8,7 +8,7 @@ services:
     build: 
       context: .
       dockerfile: ./Dockerfile
-    container_name: account-backend
+    container_name: base-account-backend
     ports:
       - "9527:9527"
     env_file:
@@ -21,7 +21,8 @@ services:
       - intranet
 
   account-db:
-    container_name: dev-shared-mysql
+    container_name: base-dev-shared-mysql
+    platform: linux/x86_64
     image: mysql:8.0.25
     ports:
      - "3306:3306"
@@ -33,20 +34,8 @@ services:
       - "dev_account_db:/var/lib/mysql"
     networks:
       - intranet
-  # redis:
-  #   image: redis:5.0.5-alpine
-  #   container_name: dev-shared-redis
-  #   restart: always
-  #   environment:
-  #     - "ENV=develop"
-  #   ports:
-  #     - "6379:6379"
-  #   expose:
-  #     - "6379"
-  #   networks:
-  #     - intranet
   phpmyadmin:
-    container_name: dev-shared-pma
+    container_name: base-dev-shared-pma
     image: phpmyadmin/phpmyadmin
     ports:
      - "8008:80"
@@ -60,8 +49,7 @@ services:
 
 networks:
   intranet: 
-    external:
-      name: intranet
+    name: intranet
 volumes:
   dev_account_db:
     external: true
