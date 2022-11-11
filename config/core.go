@@ -10,6 +10,7 @@ type ConfigInterface interface {
 	GetSMTPPort() string
 	GetSMTPUsername() string
 	GetSMTPPassword() string
+	GetSMTPSender() string
 	GetOAuth2HeaderPrefix() string
 	GetSignUpEmailSubject() string
 	GetSignUpEmailContent() string

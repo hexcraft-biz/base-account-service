@@ -26,9 +26,9 @@ func MustNot(err error) {
 	}
 }
 
-//================================================================
+// ================================================================
 // AppConfig implement ConfigInterface
-//================================================================
+// ================================================================
 type AppConfig struct {
 	DB *sqlx.DB
 }
@@ -61,6 +61,10 @@ func (ac *AppConfig) GetSMTPPassword() string {
 	return os.Getenv("SMTP_PASSWORD")
 }
 
+func (ac *AppConfig) GetSMTPSender() string {
+	return os.Getenv("SMTP_SENDER")
+}
+
 func (ac *AppConfig) GetOAuth2HeaderPrefix() string {
 	return os.Getenv("OAUTH2_HEADER_PREFIX")
 }
@@ -89,9 +93,9 @@ func (ac *AppConfig) GetForgetPwdEmailLinkText() string {
 	return os.Getenv("FORGET_PWD_LINK_TEXT")
 }
 
-//================================================================
+// ================================================================
 // Env
-//================================================================
+// ================================================================
 type Env struct {
 	*env.Prototype
 }
@@ -106,9 +110,9 @@ func FetchEnv() (*Env, error) {
 	}
 }
 
-//================================================================
+// ================================================================
 //
-//================================================================
+// ================================================================
 type Config struct {
 	*Env
 	DB *sqlx.DB

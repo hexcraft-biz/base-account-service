@@ -37,9 +37,9 @@ func NewAuth(cfg config.ConfigInterface) *Auth {
 	}
 }
 
-//================================================================
+// ================================================================
 // Auth Login
-//================================================================
+// ================================================================
 type genTokenParams struct {
 	Identity string `json:"identity" binding:"required,email,min=1,max=128"`
 	Password string `json:"password" binding:"required,min=5,max=128"`
@@ -85,9 +85,9 @@ func (ctrl *Auth) Login() gin.HandlerFunc {
 	}
 }
 
-//================================================================
+// ================================================================
 // SignUp
-//================================================================
+// ================================================================
 type signUpEmailConfirmParams struct {
 	Email         string `json:"email" binding:"required,email,min=1,max=128"`
 	VerifyPageUrl string `json:"verifyPageURL" binding:"required,url"`
@@ -164,7 +164,7 @@ func (ctrl *Auth) SignUpEmailConfirm() gin.HandlerFunc {
 		})
 
 		body := tpl.String()
-		email.SendHTML(to, subject, body)
+		email.SendHTML(ctrl.Config.GetSMTPSender(), to, subject, body)
 
 		c.AbortWithStatusJSON(http.StatusAccepted, gin.H{"message": http.StatusText(http.StatusAccepted)})
 		return
@@ -255,9 +255,9 @@ func (ctrl *Auth) SignUp() gin.HandlerFunc {
 	}
 }
 
-//================================================================
+// ================================================================
 // ForgetPassword
-//================================================================
+// ================================================================
 type forgetPwdConfirmParams struct {
 	Email         string `json:"email" binding:"required,email,min=1,max=128"`
 	VerifyPageUrl string `json:"verifyPageURL" binding:"required,url"`
@@ -335,7 +335,7 @@ func (ctrl *Auth) ForgetPwdConfirm() gin.HandlerFunc {
 		})
 
 		body := tpl.String()
-		email.SendHTML(to, subject, body)
+		email.SendHTML(ctrl.Config.GetSMTPSender(), to, subject, body)
 
 		c.AbortWithStatusJSON(http.StatusAccepted, gin.H{"message": http.StatusText(http.StatusAccepted)})
 		return
