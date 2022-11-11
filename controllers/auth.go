@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"bytes"
+	"fmt"
 	"net/http"
 	"text/template"
 	"time"
@@ -164,7 +165,8 @@ func (ctrl *Auth) SignUpEmailConfirm() gin.HandlerFunc {
 		})
 
 		body := tpl.String()
-		email.SendHTML(ctrl.Config.GetSMTPSender(), to, subject, body)
+		e := email.SendHTML(ctrl.Config.GetSMTPSender(), to, subject, body)
+		fmt.Println(ctrl.Config.GetSMTPSender(), e)
 
 		c.AbortWithStatusJSON(http.StatusAccepted, gin.H{"message": http.StatusText(http.StatusAccepted)})
 		return
