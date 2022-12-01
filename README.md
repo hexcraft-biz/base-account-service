@@ -4,7 +4,8 @@ You can inherit from base-account-service and extend and develop the account sys
 Please remember to use the same database with [accounts-service-backend](https://github.com/hexcraft-biz/accounts-service-backend)  
 
 ## Endpoint
-### GET /healthcheck/v1/ping
+### HealthCheck
+#### GET /healthcheck/v1/ping
 - Params
   - None
 - Resonse
@@ -14,6 +15,7 @@ Please remember to use the same database with [accounts-service-backend](https:/
 	  "message": "OK"
 	}
 	```
+
 ### UserPrototype
 #### GET /users/v1/users/:user_id/prototype
 - Required Scope : `user.prototype`
