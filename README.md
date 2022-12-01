@@ -8,7 +8,7 @@ Please remember to use the same database with [accounts-service-backend](https:/
 #### GET /healthcheck/v1/ping
 - Params
   - None
-- Resonse
+- Response
   - 200
 	```json
 	{
@@ -118,7 +118,7 @@ Please remember to use the same database with [accounts-service-backend](https:/
       - Required : True
       - Type : String
       - Example : "9cfa987b-022d-4461-82c6-f7f12d706163"
-- Resonse
+- Response
   - 204
   - 400 | 401 | 403 | 404 | 500
 	```json
