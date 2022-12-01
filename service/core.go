@@ -14,8 +14,6 @@ func New(cfg config.ConfigInterface) *gin.Engine {
 
 	// base features
 	features.LoadCommon(engine, cfg)
-	// auth
-	features.LoadAuth(engine, cfg)
 	// users
 	features.LoadUsers(engine, cfg)
 
