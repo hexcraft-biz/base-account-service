@@ -3,7 +3,7 @@ The base-account-service for building a customer account system.
 You can inherit from base-account-service and extend and develop the account system you need.  
 Please remember to use the same database with [accounts-service-backend](https://github.com/hexcraft-biz/accounts-service-backend)  
 
-## End Point
+## Endpoint
 ### GET /healthcheck/v1/ping
 - Params
   - None
@@ -11,7 +11,7 @@ Please remember to use the same database with [accounts-service-backend](https:/
   - 200
 	```json
 	{
-    	  "message": "OK"
+  	"message": "OK"
 	}
 	```
 ### UserPrototype
