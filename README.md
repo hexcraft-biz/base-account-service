@@ -1,9 +1,7 @@
 # Base Account Service
 
 # TODO List
-- [ ] Enhanced password requirements.
-- [ ] System email supports multi languages.
-- [ ] Separate account and accounts feature.
+- [x] Separate account and accounts feature.
 
 ## Quick start
 
