@@ -1,7 +1,7 @@
-# Base Account Service
-
-# TODO List
-- [x] Separate account and accounts feature.
+# base-account-service
+The base-account-service for building a customer account system.  
+You can inherit from base-account-service and extend and develop the account system you need.  
+Please remember to use the same database with (accounts-service-backend)[https://github.com/hexcraft-biz/accounts-service-backend]  
 
 ## Quick start
 
@@ -42,28 +42,8 @@ func (ac *AppConfig) GetDB() *sqlx.DB {
 	return ac.DB
 }
 
-func (ac *AppConfig) GetJWTSecret() []byte {
-	return []byte(os.Getenv("JWT_SECRET"))
-}
-
 func (ac *AppConfig) GetTrustProxy() string {
 	return os.Getenv("TRUST_PROXY")
-}
-
-func (ac *AppConfig) GetSMTPHost() string {
-	return os.Getenv("SMTP_HOST")
-}
-
-func (ac *AppConfig) GetSMTPPort() string {
-	return os.Getenv("SMTP_PORT")
-}
-
-func (ac *AppConfig) GetSMTPUsername() string {
-	return os.Getenv("SMTP_USERNAME")
-}
-
-func (ac *AppConfig) GetSMTPPassword() string {
-	return os.Getenv("SMTP_PASSWORD")
 }
 
 func (ac *AppConfig) GetOAuth2HeaderPrefix() string {
