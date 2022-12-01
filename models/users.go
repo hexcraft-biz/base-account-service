@@ -15,9 +15,9 @@ const (
 	PW_SALT_BYTES = 16
 )
 
-//================================================================
+// ================================================================
 // Data Struct
-//================================================================
+// ================================================================
 type EntityUser struct {
 	*model.Prototype `dive:""`
 	Identity         string `db:"identity"`
@@ -48,9 +48,9 @@ type AbsUser struct {
 	UpdatedAt string    `json:"updatedAt"`
 }
 
-//================================================================
+// ================================================================
 // Engine
-//================================================================
+// ================================================================
 type UsersTableEngine struct {
 	*model.Engine
 }
@@ -139,5 +139,15 @@ func (e *UsersTableEngine) UpdateStatus(id *uuid.UUID, status string) (int64, er
 		return 0, err
 	} else {
 		return rst.RowsAffected()
+	}
+}
+
+func (e *UsersTableEngine) Delete(id string) error {
+	if u, err := uuid.Parse(id); err != nil {
+		return nil
+	} else if _, err := e.Exec(`DELETE FROM users WHERE id = UUID_TO_BIN(?);`, u); err != nil {
+		return err
+	} else {
+		return nil
 	}
 }
