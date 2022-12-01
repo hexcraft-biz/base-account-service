@@ -11,7 +11,7 @@ Please remember to use the same database with [accounts-service-backend](https:/
   - 200
 	```json
 	{
-  	"message": "OK"
+	  "message": "OK"
 	}
 	```
 ### UserPrototype
